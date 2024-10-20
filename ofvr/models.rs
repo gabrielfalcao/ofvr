@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct Keypair {
@@ -86,8 +86,14 @@ pub struct Authority {
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
+pub enum Polarity {
+    Positive,
+    Negative,
+}
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct Complex {
-    real: i64,
+    polarity: Polarity,
+    real: u64,
     imag: u64,
 }
 
@@ -159,6 +165,7 @@ pub struct Message {
     source: Peer,
     destination: Peer,
     azimuth: Azimuth,
+    path: Vec<Whence>,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
