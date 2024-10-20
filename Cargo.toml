@@ -1,0 +1,50 @@
+cargo-features = ["per-package-target", "edition2024"]
+
+[package]
+name = "ofvr"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+autoexamples = false
+autobenches = false
+default-target = "aarch64-apple-darwin"
+[package.metadata]
+cargo-args = ["-Zmtime-on-use", "-Zavoid-dev-deps", "-Zcustom_mir"]
+targets = [
+    "aarch64-apple-darwin",
+]
+
+[target.'cfg(unix)'.dependencies]
+bstr = "1.9.1"
+carbon14 = { path = "../../../../personal/carbon14" }
+chrono = { version = "0.4.38", features = ["serde", "libc"] }
+clap = { version = "4.5.4", features = ["derive", "wrap_help", "env", "unicode", "string", "cargo"] }
+enum-to-string = { path = "../gadgets/packages/enum-to-string" }
+thread-group = { path = "../gadgets/packages/thread-group" }
+iocore = { path = "../gadgets/packages/iocore" }
+sanitation = { path = "../gadgets/packages/sanitation" }
+hex = "0.4.3"
+zstd = "0.13.1"
+flate2 = "1.0.30"
+
+[[bin]]
+name = "ofvr"
+path = "ofvr.rs"
+test = false
+doctest = false
+
+[lib]
+name = "ofvr"
+path = "ofvr/lib.rs"
+test = true
+doctest = false
+bench = false
+doc = false
+plugin = false
+harness = true
+edition = "2021"
+crate-type = ["lib"]
+required-features = []
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin)'] }
