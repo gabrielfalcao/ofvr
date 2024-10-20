@@ -37,6 +37,11 @@ rbac = "0.1.0"
 rbac-macro = "0.1.0"
 rsa = "0.9.6"
 serde = { version = "1.0.210", features = ["derive"] }
+ed25519 = { version = "2.2.3", features = ["serde", "pem", "pkcs8"] }
+pkcs8 = { version = "0.10.2", features = ["des-insecure", "std", "pkcs5", "3des"] }
+pkcs5 = { version = "0.7.1", features = ["des-insecure", "3des"] }
+des = "0.8.1"
+crypto-common = { version = "0.1.6", features = ["std", "rand_core"] }
 
 [[bin]]
 name = "ofvr"

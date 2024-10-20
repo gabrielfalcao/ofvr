@@ -2,11 +2,37 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
+pub struct CurvePrivateKey {
+    data: [u8; 64],
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
+pub struct CurvePublicKey {
+    data: [u8; 32],
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
+pub struct CurveKeypair {
+    id: Vec<u8>,
+    private: CurvePrivateKey,
+    public: CurvePublicKey,
+}
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
+pub struct PrivateKey {
+    data: [u8; 2048],
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
+pub struct PublicKey {
+    data: [u8; 4096],
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct Keypair {
     id: Vec<u8>,
-    private: Vec<u8>,
-    public: Vec<u8>,
-    lock: Vec<u8>,
+    private: PrivateKey,
+    public: PublicKey,
+    lock: CurvePublicKey,
     salt: t16::Data,
 }
 
@@ -37,9 +63,9 @@ pub struct Azimuth {
 pub struct Signature {
     id: Vec<u8>,
     salt: t16::Data,
-    private: Vec<u8>,
-    public: Vec<u8>,
-    unlock: Keypair,
+    private: PrivateKey,
+    public: PublicKey,
+    unlock: CurvePrivateKey,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
@@ -49,6 +75,7 @@ pub struct Identity {
     updated: PostQuantumPosition,
     email: String,
     keys: Vec<Keypair>,
+    prekeys: Vec<CurveKeypair>,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
@@ -72,7 +99,7 @@ pub struct KeyStuff {
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
-pub struct Peer {
+pub struct Party {
     id: Vec<u8>,
     peer_key_stuff: KeyStuff,
 }
@@ -90,6 +117,7 @@ pub enum Polarity {
     Positive,
     Negative,
 }
+
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct Complex {
     polarity: Polarity,
@@ -162,8 +190,8 @@ pub struct Message {
     peer_key_stuff: KeyStuff,
     sent: SentOcurrence,
     receipt: ReceiptOcurrence,
-    source: Peer,
-    destination: Peer,
+    source: Party,
+    destination: Party,
     azimuth: Azimuth,
     path: Vec<Whence>,
 }
