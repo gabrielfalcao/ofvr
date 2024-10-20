@@ -15,17 +15,19 @@ targets = [
 ]
 
 [target.'cfg(unix)'.dependencies]
-bstr = "1.9.1"
-carbon14 = { path = "../../../../personal/carbon14" }
-chrono = { version = "0.4.38", features = ["serde", "libc"] }
+# carbon14 = { path = "../../../../personal/carbon14" }
+# chrono = { version = "0.4.38", features = ["serde", "libc"] }
+# flate2 = "1.0.30"
+# hex = "0.4.3"
+# sanitation = { path = "../gadgets/packages/sanitation" }
+# thread-group = { path = "../gadgets/packages/thread-group" }
+# zstd = "0.13.1"
 clap = { version = "4.5.4", features = ["derive", "wrap_help", "env", "unicode", "string", "cargo"] }
 enum-to-string = { path = "../gadgets/packages/enum-to-string" }
-thread-group = { path = "../gadgets/packages/thread-group" }
 iocore = { path = "../gadgets/packages/iocore" }
-sanitation = { path = "../gadgets/packages/sanitation" }
-hex = "0.4.3"
-zstd = "0.13.1"
-flate2 = "1.0.30"
+rbac = "0.1.0"
+rbac-macro = "0.1.0"
+serde = { version = "1.0.210", features = ["derive"] }
 
 [[bin]]
 name = "ofvr"
@@ -48,3 +50,6 @@ required-features = []
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin)'] }
+
+[dependencies]
+bincode = "1.3.3"
