@@ -14,7 +14,8 @@ targets = [
     "aarch64-apple-darwin",
 ]
 
-[target.'cfg(unix)'.dependencies]
+[dependencies]
+base32 = "0.5.1"
 # carbon14 = { path = "../../../../personal/carbon14" }
 # chrono = { version = "0.4.38", features = ["serde", "libc"] }
 # flate2 = "1.0.30"
@@ -22,11 +23,19 @@ targets = [
 # sanitation = { path = "../gadgets/packages/sanitation" }
 # thread-group = { path = "../gadgets/packages/thread-group" }
 # zstd = "0.13.1"
+bincode = "1.3.3"
+bzip2 = "0.4.4"
 clap = { version = "4.5.4", features = ["derive", "wrap_help", "env", "unicode", "string", "cargo"] }
+t16 = { path = "../t16" }
 enum-to-string = { path = "../gadgets/packages/enum-to-string" }
+flate2 = "1.0.34"
+gzip = "0.1.2"
 iocore = { path = "../gadgets/packages/iocore" }
+otpauth = "0.5.1"
+rand = "0.8.5"
 rbac = "0.1.0"
 rbac-macro = "0.1.0"
+rsa = "0.9.6"
 serde = { version = "1.0.210", features = ["derive"] }
 
 [[bin]]
@@ -50,6 +59,3 @@ required-features = []
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin)'] }
-
-[dependencies]
-bincode = "1.3.3"
