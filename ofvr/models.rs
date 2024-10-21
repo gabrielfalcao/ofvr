@@ -56,6 +56,7 @@ pub struct Azimuth {
     x_axis: Axis,
     y_axis: Axis,
     z_axis: Axis,
+    angle: Complex,
     path: Vec<Plain>,
 }
 
