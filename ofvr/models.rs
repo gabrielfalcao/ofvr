@@ -1,14 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use pqpfs::Data;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct CurvePrivateKey {
-    data: [u8; 64],
+    data: Data,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct CurvePublicKey {
-    data: [u8; 32],
+    data: Data,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
@@ -19,12 +20,12 @@ pub struct CurveKeypair {
 }
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct PrivateKey {
-    data: [u8; 2048],
+    data: Data,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
 pub struct PublicKey {
-    data: [u8; 4096],
+    data: Data,
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Serialize, Deserialize)]
