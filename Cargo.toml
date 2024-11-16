@@ -25,6 +25,7 @@ gdiff = { path = "../gadgets/packages/gdiff" }
 security-framework = { version = "3.0.0", features = ["OSX_10_13", "log"] }
 clap = "4.5.21"
 iocore = { version = "0.1000.0", path = "../gadgets/packages/iocore" }
+hex = "0.4.3"
 
 [[bin]]
 name = "ofvr"

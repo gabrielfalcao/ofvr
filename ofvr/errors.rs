@@ -6,6 +6,8 @@ use serde::{Serialize, Serializer};
 #[derive(Debug, Clone)]
 pub enum Error {
     PQPFSError(String),
+    DiffError(String),
+    IOError(String),
 }
 
 impl Serialize for Error {
@@ -27,6 +29,8 @@ impl Display for Error {
             self.variant(),
             match self {
                 Self::PQPFSError(s) => format!("{}", s),
+                Self::DiffError(s) => format!("{}", s),
+                Self::IOError(s) => format!("{}", s),
             }
         )
     }
@@ -35,6 +39,8 @@ impl Error {
     pub fn variant(&self) -> String {
         match self {
             Error::PQPFSError(_) => "PQPFSError",
+            Error::DiffError(_) => "DiffError",
+            Error::IOError(_) => "IOError",
         }
         .to_string()
     }
@@ -42,6 +48,17 @@ impl Error {
 impl From<pqpfs::Error> for Error {
     fn from(e: pqpfs::Error) -> Self {
         Error::PQPFSError(format!("{}", e))
+    }
+}
+
+impl From<gdiff::Error> for Error {
+    fn from(e: gdiff::Error) -> Self {
+        Error::DiffError(format!("{}", e))
+    }
+}
+impl From<iocore::Exception> for Error {
+    fn from(e: iocore::Exception) -> Self {
+        Error::IOError(format!("{}", e))
     }
 }
 

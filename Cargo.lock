@@ -838,6 +838,7 @@ dependencies = [
  "chrono",
  "clap",
  "gdiff",
+ "hex",
  "iocore",
  "pqpfs",
  "security-framework",
