@@ -138,7 +138,7 @@ impl OFVRState {
         }
     }
     pub fn store(&self) -> Result<()> {
-        self.path.write(&bincode::serialize(self)?)?;
+        self.path.write(&self.to_bytes()?)?;
         Ok(())
     }
     pub fn path(&self) -> Path {
@@ -148,11 +148,11 @@ impl OFVRState {
         let data = read_data(path)?;
         Ok(OFVRState::from_bytes(&data.bytes())?)
     }
-    pub fn to_bytes(&self) -> Result<Data> {
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
         let bytes = bincode::serialize(self)?;
         let mut e = DeflateEncoder::new(Vec::new(), Compression::best());
         e.write(&bytes)?;
-        Ok(Data::from(e.finish()?))
+        Ok(e.finish()?)
     }
     pub fn from_bytes(bytes: &[u8]) -> Result<OFVRState> {
         let mut d = DeflateDecoder::new(Vec::new());

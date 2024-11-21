@@ -38,12 +38,12 @@ impl CommitOpt {
     pub fn commit_author(&self) -> String {
         match &self.commit_author {
             Some(author) => author.to_string(),
-            None => [
-                std::env::var("USER").expect("USER env var"),
-                std::env::var("HOSTNAME").expect("HOSTNAME env var"),
-            ]
-            .to_vec()
-            .join("@"),
+            None => [std::env::var("USER"), std::env::var("HOSTNAME")]
+                .iter()
+                .filter(|var| var.is_ok())
+                .map(|var| var.clone().unwrap().to_string())
+                .collect::<Vec<String>>()
+                .join("@"),
         }
     }
 }
@@ -64,7 +64,10 @@ fn main() -> Result<()> {
                     &op.commit_message,
                     &op.from_file,
                 )?;
-                (state.clone(), state.latest_commit().expect("newly created commit"))
+                (
+                    state.clone(),
+                    state.latest_commit().expect("newly created commit"),
+                )
             };
             println!("[{} {}]", &commit.author(), &commit.date_rfc2822());
             println!("\t{}", &commit.message());

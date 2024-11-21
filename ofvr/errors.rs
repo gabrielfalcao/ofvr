@@ -73,7 +73,7 @@ impl From<iocore::Exception> for Error {
 }
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
-        Error::IOError(format!("{}", e))
+        Error::IOError(format!("{:#?}", e))
     }
 }
 impl From<Box<bincode::ErrorKind>> for Error {
