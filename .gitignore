@@ -1,2 +1,3 @@
 /target
 *.ofvrf
+/tests/cargo-run*

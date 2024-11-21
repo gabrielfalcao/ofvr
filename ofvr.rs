@@ -52,7 +52,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
         Command::Commit(op) => {
-            let (ofvr, commit) = if op.ofvr_state_path().is_file() {
+            let (_ofvr, commit) = if op.ofvr_state_path().is_file() {
                 let mut state = OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?;
                 let commit =
                     state.commit(&op.from_file, &op.commit_author(), &op.commit_message)?;
@@ -69,9 +69,9 @@ fn main() -> Result<()> {
                     state.latest_commit().expect("newly created commit"),
                 )
             };
-            println!("[{} {}]", &commit.author(), &commit.date_rfc2822());
+            println!("Author: {}", &commit.author());
+            println!("Date: {}", &commit.date_rfc2822());
             println!("\t{}", &commit.message());
-            println!("{}", &ofvr.path());
         }
     }
     Ok(())

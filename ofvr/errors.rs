@@ -10,6 +10,7 @@ pub enum Error {
     HexDecodeError(String),
     IOError(String),
     PQPFSError(String),
+    BincodeError(String),
 }
 
 impl Serialize for Error {
@@ -35,6 +36,7 @@ impl Display for Error {
                 Self::HexDecodeError(s) => format!("{}", s),
                 Self::IOError(s) => format!("{}", s),
                 Self::PQPFSError(s) => format!("{}", s),
+                Self::BincodeError(s) => format!("{}", s),
             }
         )
     }
@@ -46,6 +48,7 @@ impl Error {
             Error::DiffError(_) => "DiffError",
             Error::HexDecodeError(_) => "HexDecodeError",
             Error::IOError(_) => "IOError",
+            Error::BincodeError(_) => "IOError",
             Error::PQPFSError(_) => "PQPFSError",
         }
         .to_string()
@@ -78,7 +81,7 @@ impl From<std::io::Error> for Error {
 }
 impl From<Box<bincode::ErrorKind>> for Error {
     fn from(e: Box<bincode::ErrorKind>) -> Self {
-        Error::IOError(format!("{}", e))
+        Error::BincodeError(format!("{:#?}", e))
     }
 }
 

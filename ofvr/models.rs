@@ -116,14 +116,6 @@ impl OFVRState {
             None => Diff::new(AxisBoundary::default()),
         };
         diff.update(&data.bytes())?;
-        // let changes = !diff
-        //     .anterior_version()
-        //     .iter()
-        //     .zip(diff.current_version())
-        //     .all(|(a, c)| *a == c);
-        // if !changes {
-        //     return Err(Error::CommitError(format!("nothing changed")));
-        // }
         let commit = Commit::now(diff, author, message, &self.path);
         self.commits.push_front(commit.clone());
         self.store()?;
@@ -158,6 +150,6 @@ impl OFVRState {
         let mut d = DeflateDecoder::new(Vec::new());
         d.write(bytes)?;
         let deflated = d.finish()?;
-        Ok(bincode::deserialize::<OFVRState>(&deflated)?)
+        Ok(bincode::deserialize::<OFVRState>(&deflated).expect("deserialize OFVRState from deflated bytes"))
     }
 }
