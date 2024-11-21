@@ -5,11 +5,11 @@ use flate2::Compression;
 use gdiff::AxisBoundary;
 use gdiff::Diff;
 use iocore::Path;
-use std::collections::vec_deque::VecDeque;
-use std::io::Write;
-// use pqpfs::Data;
+use pqpfs::Data;
 use serde::{Deserialize, Serialize};
+use std::collections::vec_deque::VecDeque;
 use std::collections::BTreeMap;
+use std::io::Write;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Commit {
@@ -76,7 +76,7 @@ impl OFVRState {
         path: &Path,
         author: &str,
         message: &str,
-        data: Vec<u8>,
+        data: Data,
     ) -> Result<OFVRState> {
         let mut state = OFVRState::empty(path);
         state.commit_blob(data, author, message)?;
@@ -108,14 +108,14 @@ impl OFVRState {
         let data = read_data(&data_path)?;
         self.commit_blob(data, author, message)
     }
-    pub fn commit_blob(&mut self, data: Vec<u8>, author: &str, message: &str) -> Result<Commit> {
+    pub fn commit_blob(&mut self, data: Data, author: &str, message: &str) -> Result<Commit> {
         let latest_commit = self.latest_commit();
 
         let mut diff = match latest_commit {
             Some(commit) => commit.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
-        diff.update(&data)?;
+        diff.update(&data.bytes())?;
         // let changes = !diff
         //     .anterior_version()
         //     .iter()
@@ -146,13 +146,13 @@ impl OFVRState {
     }
     pub fn from_path(path: &Path) -> Result<OFVRState> {
         let data = read_data(path)?;
-        Ok(OFVRState::from_bytes(&data)?)
+        Ok(OFVRState::from_bytes(&data.bytes())?)
     }
-    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+    pub fn to_bytes(&self) -> Result<Data> {
         let bytes = bincode::serialize(self)?;
         let mut e = DeflateEncoder::new(Vec::new(), Compression::best());
         e.write(&bytes)?;
-        Ok(e.finish()?)
+        Ok(Data::from(e.finish()?))
     }
     pub fn from_bytes(bytes: &[u8]) -> Result<OFVRState> {
         let mut d = DeflateDecoder::new(Vec::new());

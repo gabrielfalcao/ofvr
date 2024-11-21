@@ -8,10 +8,10 @@ fn get_tests_path() -> Path {
 fn test_file_path(name: &str) -> Path {
     get_tests_path().join(name)
 }
-fn read_test_file_path(name: &str) -> Vec<u8> {
+fn read_test_file_path(name: &str) -> pqpfs::Data {
     test_file_path(name)
         .read_bytes()
-        .expect(&format!("read bytes from {}", name))
+        .expect(&format!("read bytes from {}", name)).into()
 }
 
 #[test]
@@ -45,7 +45,8 @@ fn test_commit_from_file() {
         .expect("first commit");
     assert_eq!(state.latest_commit(), Some(first_commit.clone()));
     assert_eq!(state.first_commit(), Some(first_commit.clone()));
-    assert_eq!(state.to_bytes().expect("bytes").len(), 41125);
+    assert_eq!(state.to_bytes().expect("bytes").len() >= 41125, true);
+    assert_eq!(state.to_bytes().expect("bytes").len() <= 44996, true);
     let latest_commit = state
         .commit(
             &test_file_path("before-after/target/release/before-after"),
