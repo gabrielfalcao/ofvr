@@ -5,9 +5,11 @@ use serde::{Serialize, Serializer};
 
 #[derive(Debug, Clone)]
 pub enum Error {
-    PQPFSError(String),
+    CommitError(String),
     DiffError(String),
+    HexDecodeError(String),
     IOError(String),
+    PQPFSError(String),
 }
 
 impl Serialize for Error {
@@ -28,9 +30,11 @@ impl Display for Error {
             "{}{}",
             self.variant(),
             match self {
-                Self::PQPFSError(s) => format!("{}", s),
+                Self::CommitError(s) => format!("{}", s),
                 Self::DiffError(s) => format!("{}", s),
+                Self::HexDecodeError(s) => format!("{}", s),
                 Self::IOError(s) => format!("{}", s),
+                Self::PQPFSError(s) => format!("{}", s),
             }
         )
     }
@@ -38,9 +42,11 @@ impl Display for Error {
 impl Error {
     pub fn variant(&self) -> String {
         match self {
-            Error::PQPFSError(_) => "PQPFSError",
+            Error::CommitError(_) => "CommitError",
             Error::DiffError(_) => "DiffError",
+            Error::HexDecodeError(_) => "HexDecodeError",
             Error::IOError(_) => "IOError",
+            Error::PQPFSError(_) => "PQPFSError",
         }
         .to_string()
     }
@@ -50,7 +56,11 @@ impl From<pqpfs::Error> for Error {
         Error::PQPFSError(format!("{}", e))
     }
 }
-
+impl From<hex::FromHexError> for Error {
+    fn from(e: hex::FromHexError) -> Self {
+        Error::HexDecodeError(format!("{}", e))
+    }
+}
 impl From<gdiff::Error> for Error {
     fn from(e: gdiff::Error) -> Self {
         Error::DiffError(format!("{}", e))
@@ -58,6 +68,16 @@ impl From<gdiff::Error> for Error {
 }
 impl From<iocore::Exception> for Error {
     fn from(e: iocore::Exception) -> Self {
+        Error::IOError(format!("{}", e))
+    }
+}
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Error::IOError(format!("{}", e))
+    }
+}
+impl From<Box<bincode::ErrorKind>> for Error {
+    fn from(e: Box<bincode::ErrorKind>) -> Self {
         Error::IOError(format!("{}", e))
     }
 }

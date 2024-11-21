@@ -23,9 +23,10 @@ serde = { version = "1.0.210", features = ["derive"] }
 t16 = { path = "../t16" }
 gdiff = { path = "../gadgets/packages/gdiff" }
 security-framework = { version = "3.0.0", features = ["OSX_10_13", "log"] }
-clap = "4.5.21"
+clap = { version = "4.5.21", features = ["derive", "env"] }
 iocore = { version = "0.1000.0", path = "../gadgets/packages/iocore" }
 hex = "0.4.3"
+flate2 = "1.0.35"
 
 [[bin]]
 name = "ofvr"

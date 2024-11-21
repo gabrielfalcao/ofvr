@@ -837,6 +837,7 @@ dependencies = [
  "bincode",
  "chrono",
  "clap",
+ "flate2",
  "gdiff",
  "hex",
  "iocore",

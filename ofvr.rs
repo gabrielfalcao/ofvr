@@ -11,50 +11,64 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    New(NewOpt),
-    Update(UpdateOpt),
-    Check(CheckOpt),
+    Commit(CommitOpt),
 }
 
 #[derive(Args, Debug)]
-pub struct NewOpt {
+pub struct CommitOpt {
     #[arg()]
-    pub diff_path: Path,
-
-    #[arg(short, long = "from")]
     pub from_file: Path,
+
+    #[arg(short = 'm', long = "message", env = "OFVR_COMMIT_MESSAGE")]
+    pub commit_message: String,
+
+    #[arg(long = "author", env = "OFVR_COMMIT_AUTHOR")]
+    commit_author: Option<String>,
+
+    #[arg(short, long)]
+    ofvr_state_path: Option<Path>,
 }
-
-#[derive(Args, Debug)]
-pub struct UpdateOpt {
-    #[arg()]
-    pub diff_path: Path,
-
-    #[arg(short, long = "from")]
-    pub from_file: Path,
-}
-
-#[derive(Args, Debug)]
-pub struct CheckOpt {
-    #[arg()]
-    pub diff_path: Path,
+impl CommitOpt {
+    pub fn ofvr_state_path(&self) -> Path {
+        self.ofvr_state_path
+            .clone()
+            .or(Some(self.from_file.with_extension(".ofvr")))
+            .unwrap()
+    }
+    pub fn commit_author(&self) -> String {
+        match &self.commit_author {
+            Some(author) => author.to_string(),
+            None => [
+                std::env::var("USER").expect("USER env var"),
+                std::env::var("HOSTNAME").expect("HOSTNAME env var"),
+            ]
+            .to_vec()
+            .join("@"),
+        }
+    }
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
-        Command::New(op) => {
-            let ofvr = OFVRState::new_diff(&op.from_file, &op.diff_path)?;
-            println!("{:#?}", &ofvr);
-        }
-        Command::Update(op) => {
-            let mut ofvr = OFVRState::from_diff_path(&op.diff_path)?;
-            ofvr.update_diff_from_data_path(&op.from_file)?;
-            println!("{:#?}", &ofvr);
-        }
-        Command::Check(op) => {
-            let ofvr = OFVRState::from_diff_path(&op.diff_path)?;
-            println!("{:#?}", &ofvr);
+        Command::Commit(op) => {
+            let (ofvr, commit) = if op.ofvr_state_path().is_file() {
+                let mut state = OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?;
+                let commit =
+                    state.commit(&op.from_file, &op.commit_author(), &op.commit_message)?;
+                (state, commit)
+            } else {
+                let state = OFVRState::new_with_commit(
+                    &op.ofvr_state_path(),
+                    &op.commit_author(),
+                    &op.commit_message,
+                    &op.from_file,
+                )?;
+                (state.clone(), state.latest_commit().expect("newly created commit"))
+            };
+            println!("[{} {}]", &commit.author(), &commit.date_rfc2822());
+            println!("\t{}", &commit.message());
+            println!("{}", &ofvr.path());
         }
     }
     Ok(())
