@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+set -x
+cargo test
+set +x
+
 rm -f tests/cargo-run.ofvr
 
 cat >tests/cargo-run.txt <<EOF
