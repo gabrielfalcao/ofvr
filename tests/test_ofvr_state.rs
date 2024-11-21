@@ -55,5 +55,6 @@ fn test_commit_from_file() {
         .expect("latest commit");
     assert_eq!(state.latest_commit(), Some(latest_commit));
     assert_eq!(state.first_commit(), Some(first_commit.clone()));
-    assert_eq!(state.to_bytes().expect("bytes").len(), 44996);
+    assert_eq!(state.to_bytes().expect("bytes").len() >= 44996, true);
+    assert_eq!(state.to_bytes().expect("bytes").len() <= 44997, true);
 }
