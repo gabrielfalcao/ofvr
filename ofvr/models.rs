@@ -1,11 +1,12 @@
 use crate::io::read_data;
-use crate::Result;
+use crate::{Result, Error};
 use flate2::write::{DeflateDecoder, DeflateEncoder};
 use flate2::Compression;
 use gdiff::AxisBoundary;
 use gdiff::Diff;
 use iocore::Path;
 use pqpfs::Data;
+use sanitation::SString;
 use serde::{Deserialize, Serialize};
 use std::collections::vec_deque::VecDeque;
 use std::collections::BTreeMap;
@@ -104,6 +105,9 @@ impl OFVRState {
             None => None,
         }
     }
+    pub fn commits(&self) -> VecDeque<Commit> {
+        self.commits.clone()
+    }
     pub fn commit(&mut self, data_path: &Path, author: &str, message: &str) -> Result<Commit> {
         let data = read_data(&data_path)?;
         self.commit_blob(data, author, message)
@@ -141,7 +145,7 @@ impl OFVRState {
         Ok(OFVRState::from_bytes(&data.bytes())?)
     }
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let bytes = bincode::serialize(self)?;
+        let bytes = serde_json::to_string_pretty(self).map_err(|e|Error::EncodeError(e.to_string()))?.as_bytes().to_vec();
         let mut e = DeflateEncoder::new(Vec::new(), Compression::best());
         e.write(&bytes)?;
         Ok(e.finish()?)
@@ -149,7 +153,8 @@ impl OFVRState {
     pub fn from_bytes(bytes: &[u8]) -> Result<OFVRState> {
         let mut d = DeflateDecoder::new(Vec::new());
         d.write(bytes)?;
-        let deflated = d.finish()?;
-        Ok(bincode::deserialize::<OFVRState>(&deflated).expect("deserialize OFVRState from deflated bytes"))
+        let deflated = SString::from(d.finish()?).unchecked_safe();
+        Ok(serde_json::from_str::<OFVRState>(&deflated)
+            .expect("deserialize OFVRState from deflated bytes"))
     }
 }

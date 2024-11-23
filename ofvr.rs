@@ -12,6 +12,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Command {
     Commit(CommitOpt),
+    Log(LogOpt),
 }
 
 #[derive(Args, Debug)]
@@ -27,6 +28,16 @@ pub struct CommitOpt {
 
     #[arg(short, long)]
     ofvr_state_path: Option<Path>,
+}
+#[derive(Args, Debug)]
+pub struct LogOpt {
+    #[arg()]
+    ofvr_state_path: Path,
+}
+impl LogOpt {
+    pub fn ofvr_state_path(&self) -> Path {
+        self.ofvr_state_path.clone()
+    }
 }
 impl CommitOpt {
     pub fn ofvr_state_path(&self) -> Path {
@@ -71,7 +82,20 @@ fn main() -> Result<()> {
             };
             println!("Author: {}", &commit.author());
             println!("Date: {}", &commit.date_rfc2822());
-            println!("\t{}", &commit.message());
+            println!("\t{}\n", &commit.message());
+        }
+        Command::Log(op) => {
+            let ofvr = if op.ofvr_state_path().is_file() {
+                OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?
+            } else {
+                eprintln!("{} is not a file", op.ofvr_state_path());
+                std::process::exit(1);
+            };
+            for commit in ofvr.commits() {
+                println!("Author: {}", &commit.author());
+                println!("Date: {}", &commit.date_rfc2822());
+                println!("\t{}\n", &commit.message());
+            }
         }
     }
     Ok(())
