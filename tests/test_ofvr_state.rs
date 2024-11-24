@@ -16,13 +16,13 @@ fn read_test_file_path(name: &str) -> pqpfs::Data {
 
 #[test]
 fn test_empty_commit() {
-    let state = OFVRState::empty(&Path::new(file!()));
+    let state = OFVRState::empty(&Path::new(file!())).expect("new state");
     assert_eq!(state.latest_commit().is_some(), false);
 }
 
 #[test]
 fn test_new_commit_blob() {
-    let mut state = OFVRState::empty(&test_file_path("test.commit.ofvrf"));
+    let mut state = OFVRState::empty(&test_file_path("test.commit.ofvrf")).expect("new state");
     let commit = state
         .commit_blob(
             read_test_file_path("before-after/target/release/before-after"),
@@ -35,7 +35,7 @@ fn test_new_commit_blob() {
 
 #[test]
 fn test_commit_from_file() {
-    let mut state = OFVRState::empty(&test_file_path("test.commits.ofvrf"));
+    let mut state = OFVRState::empty(&test_file_path("test.commits.ofvrf")).expect("new state");
     let first_commit = state
         .commit(
             &test_file_path("before-after/target/debug/before-after"),
@@ -45,8 +45,8 @@ fn test_commit_from_file() {
         .expect("first commit");
     assert_eq!(state.latest_commit(), Some(first_commit.clone()));
     assert_eq!(state.first_commit(), Some(first_commit.clone()));
-    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) >= 41124, true);
-    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) <= 41128, true);
+    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) >= 43918, true);
+    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) <= 43922, true);
     let latest_commit = state
         .commit(
             &test_file_path("before-after/target/release/before-after"),
@@ -56,6 +56,6 @@ fn test_commit_from_file() {
         .expect("latest commit");
     assert_eq!(state.latest_commit(), Some(latest_commit));
     assert_eq!(state.first_commit(), Some(first_commit.clone()));
-    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) >= 44994, true);
-    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) <= 44998, true);
+    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) >= 46016, true);
+    assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) <= 46020, true);
 }

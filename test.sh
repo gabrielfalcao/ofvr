@@ -20,3 +20,6 @@ EOF
 run commit -m 'test' tests/cargo-run.txt
 
 run log tests/cargo-run.ofvr
+
+g o -e "\033[1;38;5;154mcargo test\033[0m"
+cargo test

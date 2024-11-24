@@ -1,15 +1,16 @@
 use crate::io::read_data;
-use crate::{Result, Error};
+use crate::{Error, Result};
+use pqpfs::{RSAPrivateKey, RSAPublicKey};
 use flate2::write::{DeflateDecoder, DeflateEncoder};
 use flate2::Compression;
 use gdiff::AxisBoundary;
 use gdiff::Diff;
 use iocore::Path;
 use pqpfs::Data;
-use sanitation::SString;
 use serde::{Deserialize, Serialize};
 use std::collections::vec_deque::VecDeque;
 use std::collections::BTreeMap;
+use std::io::Read;
 use std::io::Write;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
@@ -20,6 +21,8 @@ pub struct Commit {
     path: Path,
     author: String,
     optional_metadata: BTreeMap<String, String>,
+    // encryption_key: RSAPublicKey,
+    // signing_key: RSAPrivateKey,
 }
 
 impl Commit {
@@ -70,6 +73,7 @@ impl Commit {
 pub struct OFVRState {
     commits: VecDeque<Commit>,
     path: Path,
+    private_key: RSAPrivateKey
 }
 
 impl OFVRState {
@@ -79,7 +83,7 @@ impl OFVRState {
         message: &str,
         data: Data,
     ) -> Result<OFVRState> {
-        let mut state = OFVRState::empty(path);
+        let mut state = OFVRState::empty(path)?;
         state.commit_blob(data, author, message)?;
         Ok(state)
     }
@@ -89,7 +93,7 @@ impl OFVRState {
         message: &str,
         data_path: &Path,
     ) -> Result<OFVRState> {
-        let mut state = OFVRState::empty(path);
+        let mut state = OFVRState::empty(path)?;
         state.commit(data_path, author, message)?;
         Ok(state)
     }
@@ -113,9 +117,7 @@ impl OFVRState {
         self.commit_blob(data, author, message)
     }
     pub fn commit_blob(&mut self, data: Data, author: &str, message: &str) -> Result<Commit> {
-        let latest_commit = self.latest_commit();
-
-        let mut diff = match latest_commit {
+        let mut diff = match self.latest_commit() {
             Some(commit) => commit.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
@@ -125,13 +127,14 @@ impl OFVRState {
         self.store()?;
         Ok(commit)
     }
-    pub fn empty(path: &Path) -> OFVRState {
+    pub fn empty(path: &Path) -> Result<OFVRState> {
         let commits = VecDeque::new();
         let path = path.clone();
-        OFVRState {
+        Ok(OFVRState {
             commits: commits.into(),
             path,
-        }
+            private_key: RSAPrivateKey::generate()?
+        })
     }
     pub fn store(&self) -> Result<()> {
         self.path.write(&self.to_bytes()?)?;
@@ -145,7 +148,11 @@ impl OFVRState {
         Ok(OFVRState::from_bytes(&data.bytes())?)
     }
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let bytes = serde_json::to_string_pretty(self).map_err(|e|Error::EncodeError(e.to_string()))?.as_bytes().to_vec();
+        let bytes = bincode::serialize(self)
+            .map_err(|e| Error::EncodeError(e.to_string()))?
+            .bytes()
+            .map(|byte| byte.unwrap_or_default())
+            .collect::<Vec<u8>>();
         let mut e = DeflateEncoder::new(Vec::new(), Compression::best());
         e.write(&bytes)?;
         Ok(e.finish()?)
@@ -153,8 +160,8 @@ impl OFVRState {
     pub fn from_bytes(bytes: &[u8]) -> Result<OFVRState> {
         let mut d = DeflateDecoder::new(Vec::new());
         d.write(bytes)?;
-        let deflated = SString::from(d.finish()?).unchecked_safe();
-        Ok(serde_json::from_str::<OFVRState>(&deflated)
+        let deflated = d.finish()?;
+        Ok(bincode::deserialize::<OFVRState>(&deflated)
             .expect("deserialize OFVRState from deflated bytes"))
     }
 }
