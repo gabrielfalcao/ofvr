@@ -5,8 +5,9 @@ use flate2::Compression;
 use gdiff::AxisBoundary;
 use gdiff::Diff;
 use iocore::Path;
-use pqpfs::{RSAPrivateKey, RSAPublicKey};
+use pqpfs::{RSAPrivateKey, RSAPublicKey, from_deflate_bytes, to_flate_bytes};
 use serde::{Deserialize, Serialize};
+pub use sha3::{Digest, Keccak256, Keccak256Full};
 use std::collections::vec_deque::VecDeque;
 use std::collections::BTreeMap;
 use std::io::Read;
@@ -28,7 +29,7 @@ impl Author {
         Ok(Author {
             name: name.to_string(),
             email: email.to_string(),
-            private_key: hex::encode(RSAPrivateKey::generate()?.to_flate_bytes()?)
+            private_key: hex::encode(RSAPrivateKey::generate()?.to_flate_bytes()?),
         })
     }
     pub fn from_conf(conf: &Conf) -> Author {
@@ -124,6 +125,21 @@ impl Commit {
     ) -> Result<Commit> {
         let date = t16::Data::from_datetime(chrono::Utc::now());
         Commit::new(&date, diff, author, message, path, ancestor_key)
+    }
+    pub fn id(&self) -> Result<String> {
+        let bytes = self.to_flate_bytes()?;
+        let mut keccak256 = Keccak256::new();
+        keccak256.update(bytes.as_slice());
+        let keccak256 = hex::encode(keccak256.finalize());
+        Ok(keccak256)
+    }
+
+    pub fn to_flate_bytes(&self) -> Result<Vec<u8>> {
+        Ok(to_flate_bytes(self)?)
+    }
+
+    pub fn from_deflate_bytes(bytes: &[u8]) -> Result<RSAPrivateKey> {
+        Ok(from_deflate_bytes::<RSAPrivateKey>(bytes)?)
     }
 }
 

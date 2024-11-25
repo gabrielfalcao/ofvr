@@ -73,7 +73,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
         Command::Commit(op) => {
-            let (ofvr, commit) = if op.ofvr_state_path().is_file() {
+            let (_ofvr_, commit) = if op.ofvr_state_path().is_file() {
                 let mut state = OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?;
                 let commit =
                     state.commit(&op.from_file, &op.commit_author()?, &op.commit_message)?;
@@ -90,7 +90,7 @@ fn main() -> Result<()> {
                     state.latest_commit().expect("newly created commit"),
                 )
             };
-            println!("Commit: {}", &ofvr.commits().len());
+            println!("Commit: {}", &commit.id()?);
             println!("Author: {}", &commit.author());
             println!("Date: {}", &commit.date_rfc2822());
             println!("\t{}\n", &commit.message());
@@ -102,9 +102,8 @@ fn main() -> Result<()> {
                 eprintln!("{} is not a file", op.ofvr_state_path());
                 std::process::exit(1);
             };
-            for (id, commit) in ofvr.commits().iter().enumerate() {
-                let id = ofvr.commits().len() - id;
-                println!("Commit: {}", &id);
+            for commit in ofvr.commits().iter() {
+                println!("Commit: {}", &commit.id()?);
                 println!("Author: {}", &commit.author());
                 println!("Date: {}", &commit.date_rfc2822());
                 println!("\t{}\n", &commit.message());

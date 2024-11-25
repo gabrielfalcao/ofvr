@@ -7,6 +7,7 @@ run() {
     g o -e "\033[1;38;5;220mofvr ${*}\033[0m"
     cargo run -q -- $*
 }
+cargo check
 
 cat >tests/cargo-run.txt <<EOF
 # ofvr commit 1 @ $(date)
