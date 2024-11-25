@@ -13,6 +13,7 @@ pub enum Error {
     IOError(String),
     PQPFSError(String),
     BincodeError(String),
+    TomlError(String),
 }
 
 impl Serialize for Error {
@@ -41,6 +42,7 @@ impl Display for Error {
                 Self::IOError(s) => format!("{}", s),
                 Self::PQPFSError(s) => format!("{}", s),
                 Self::BincodeError(s) => format!("{}", s),
+                Self::TomlError(s) => format!("{}", s),
             }
         )
     }
@@ -54,7 +56,8 @@ impl Error {
             Error::DecodeError(_) => "DecodeError",
             Error::EncodeError(_) => "EncodeError",
             Error::IOError(_) => "IOError",
-            Error::BincodeError(_) => "IOError",
+            Error::BincodeError(_) => "BincodeError",
+            Error::TomlError(_) => "TomlError",
             Error::PQPFSError(_) => "PQPFSError",
         }
         .to_string()
@@ -88,6 +91,16 @@ impl From<std::io::Error> for Error {
 impl From<Box<bincode::ErrorKind>> for Error {
     fn from(e: Box<bincode::ErrorKind>) -> Self {
         Error::BincodeError(format!("{:#?}", e))
+    }
+}
+impl From<toml::ser::Error> for Error {
+    fn from(e: toml::ser::Error) -> Self {
+        Error::TomlError(format!("{}", e))
+    }
+}
+impl From<toml::de::Error> for Error {
+    fn from(e: toml::de::Error) -> Self {
+        Error::TomlError(format!("{}", e))
     }
 }
 

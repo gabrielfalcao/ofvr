@@ -1,12 +1,11 @@
 use crate::io::read_data;
 use crate::{Error, Result};
-use pqpfs::{RSAPrivateKey, RSAPublicKey};
 use flate2::write::{DeflateDecoder, DeflateEncoder};
 use flate2::Compression;
 use gdiff::AxisBoundary;
 use gdiff::Diff;
 use iocore::Path;
-use pqpfs::Data;
+use pqpfs::{RSAPrivateKey, RSAPublicKey};
 use serde::{Deserialize, Serialize};
 use std::collections::vec_deque::VecDeque;
 use std::collections::BTreeMap;
@@ -14,15 +13,48 @@ use std::io::Read;
 use std::io::Write;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
+pub struct Author {
+    name: String,
+    email: String,
+    private_key: RSAPrivateKey,
+}
+impl std::fmt::Display for Author {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} <{}>", &self.name, &self.email,)
+    }
+}
+impl Author {
+    // pub fn from_str(data: &str) -> Result<Author> { let regex = regex::Regex::new(r"^(\w+(\s\w+)*)\s+[<]([A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+[.][a-z][a-z0-9]+)[>]$").expect("valid regex"); let matches = regex.captures(data); match regex { None => Err(Error::DecodeError(format!( "invalid author address {:#?}", data ))), Some(matches) => { let name = matches.get(0).unwrap().as_str().to_string(); let email = matches.get(1).unwrap().as_str().to_string(); Ok(Author { name, email, private_key: RSAPrivateKey::generate()?, }) } } }
+    pub fn from_conf(conf: &Conf) -> Author {
+        conf.author()
+    }
+    pub fn public_key(&self) -> RSAPublicKey {
+        self.private_key.public_key()
+    }
+}
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
+pub struct Conf {
+    author: Author,
+}
+impl Conf {
+    pub fn author(&self) -> Author {
+        self.author.clone()
+    }
+    pub fn load() -> Result<Conf> {
+        let path = Path::new("~/.ofvr").canonicalize()?;
+        Ok(toml::from_str::<Conf>(&path.read()?)?)
+    }
+}
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Commit {
     date: t16::Data,
     diff: Diff,
     message: String,
     path: Path,
-    author: String,
+    author: Author,
     optional_metadata: BTreeMap<String, String>,
-    // encryption_key: RSAPublicKey,
-    // signing_key: RSAPrivateKey,
+    encryption_key: RSAPublicKey,
+    signing_key: RSAPrivateKey,
 }
 
 impl Commit {
@@ -35,7 +67,7 @@ impl Commit {
     pub fn diff(&self) -> Diff {
         self.diff.clone()
     }
-    pub fn author(&self) -> String {
+    pub fn author(&self) -> Author {
         self.author.clone()
     }
     pub fn message(&self) -> String {
@@ -47,25 +79,41 @@ impl Commit {
     pub fn optional_metadata(&self) -> BTreeMap<String, String> {
         self.optional_metadata.clone()
     }
-    pub fn new(date: &t16::Data, diff: Diff, author: &str, message: &str, path: &Path) -> Commit {
-        let author = author.to_string();
+    pub fn new(
+        date: &t16::Data,
+        diff: Diff,
+        author: &Author,
+        message: &str,
+        path: &Path,
+        ancestor_key: &RSAPublicKey,
+    ) -> Result<Commit> {
+        let encryption_key = ancestor_key.clone();
+        let author = author.clone();
         let date = date.clone();
         let message = message.to_string();
         let optional_metadata = BTreeMap::<String, String>::new();
         let path = path.clone();
 
-        Commit {
+        Ok(Commit {
             author,
             date,
             diff,
             message,
             optional_metadata,
             path,
-        }
+            encryption_key,
+            signing_key: RSAPrivateKey::generate()?,
+        })
     }
-    pub fn now(diff: Diff, author: &str, message: &str, path: &Path) -> Commit {
+    pub fn now(
+        diff: Diff,
+        author: &Author,
+        message: &str,
+        path: &Path,
+        ancestor_key: &RSAPublicKey,
+    ) -> Result<Commit> {
         let date = t16::Data::from_datetime(chrono::Utc::now());
-        Commit::new(&date, diff, author, message, path)
+        Commit::new(&date, diff, author, message, path, ancestor_key)
     }
 }
 
@@ -73,27 +121,28 @@ impl Commit {
 pub struct OFVRState {
     commits: VecDeque<Commit>,
     path: Path,
-    private_key: RSAPrivateKey
+    author: Author,
+    private_key: RSAPrivateKey,
 }
 
 impl OFVRState {
     pub fn new_with_commit_blob(
         path: &Path,
-        author: &str,
+        author: &Author,
         message: &str,
-        data: Data,
+        data: &[u8],
     ) -> Result<OFVRState> {
-        let mut state = OFVRState::empty(path)?;
+        let mut state = OFVRState::empty(path, author)?;
         state.commit_blob(data, author, message)?;
         Ok(state)
     }
     pub fn new_with_commit(
         path: &Path,
-        author: &str,
+        author: &Author,
         message: &str,
         data_path: &Path,
     ) -> Result<OFVRState> {
-        let mut state = OFVRState::empty(path)?;
+        let mut state = OFVRState::empty(path, author)?;
         state.commit(data_path, author, message)?;
         Ok(state)
     }
@@ -112,32 +161,38 @@ impl OFVRState {
     pub fn commits(&self) -> VecDeque<Commit> {
         self.commits.clone()
     }
-    pub fn commit(&mut self, data_path: &Path, author: &str, message: &str) -> Result<Commit> {
+    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<Commit> {
         let data = read_data(&data_path)?;
-        self.commit_blob(data, author, message)
+        self.commit_blob(&data, author, message)
     }
-    pub fn commit_blob(&mut self, data: Data, author: &str, message: &str) -> Result<Commit> {
+    pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<Commit> {
         let mut diff = match self.latest_commit() {
             Some(commit) => commit.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
-        diff.update(&data.bytes())?;
-        let commit = Commit::now(diff, author, message, &self.path);
+        let ancestor_key = match self.latest_commit() {
+            Some(commit) => commit.signing_key.public_key(),
+            None => author.private_key.public_key(),
+        };
+        diff.update(data)?;
+        let commit = Commit::now(diff, author, message, &self.path, &ancestor_key)?;
         self.commits.push_front(commit.clone());
         self.store()?;
         Ok(commit)
     }
-    pub fn empty(path: &Path) -> Result<OFVRState> {
+    pub fn empty(path: &Path, author: &Author) -> Result<OFVRState> {
         let commits = VecDeque::new();
+        let author = author.clone();
         let path = path.clone();
         Ok(OFVRState {
             commits: commits.into(),
+            author,
             path,
-            private_key: RSAPrivateKey::generate()?
+            private_key: RSAPrivateKey::generate()?,
         })
     }
     pub fn store(&self) -> Result<()> {
-        self.path.write(&self.to_bytes()?)?;
+        self.path.write(&self.to_bytes()?.to_vec())?;
         Ok(())
     }
     pub fn path(&self) -> Path {
@@ -145,7 +200,7 @@ impl OFVRState {
     }
     pub fn from_path(path: &Path) -> Result<OFVRState> {
         let data = read_data(path)?;
-        Ok(OFVRState::from_bytes(&data.bytes())?)
+        Ok(OFVRState::from_bytes(&data)?)
     }
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         let bytes = bincode::serialize(self)
@@ -154,7 +209,7 @@ impl OFVRState {
             .map(|byte| byte.unwrap_or_default())
             .collect::<Vec<u8>>();
         let mut e = DeflateEncoder::new(Vec::new(), Compression::best());
-        e.write(&bytes)?;
+        e.write_all(&bytes.to_vec())?;
         Ok(e.finish()?)
     }
     pub fn from_bytes(bytes: &[u8]) -> Result<OFVRState> {

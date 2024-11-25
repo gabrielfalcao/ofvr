@@ -1,6 +1,7 @@
 use clap::{Args, Parser, Subcommand};
+use gdiff::{AxisBoundary, Diff};
 use iocore::Path;
-use ofvr::{OFVRState, Result};
+use ofvr::{Author, Conf, OFVRState, Result};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = "commands-cli")]
@@ -13,6 +14,7 @@ pub struct Cli {
 pub enum Command {
     Commit(CommitOpt),
     Log(LogOpt),
+    Diff(DiffOpt),
 }
 
 #[derive(Args, Debug)]
@@ -23,11 +25,21 @@ pub struct CommitOpt {
     #[arg(short = 'm', long = "message", env = "OFVR_COMMIT_MESSAGE")]
     pub commit_message: String,
 
-    #[arg(long = "author", env = "OFVR_COMMIT_AUTHOR")]
-    commit_author: Option<String>,
-
     #[arg(short, long)]
     ofvr_state_path: Option<Path>,
+}
+impl CommitOpt {
+    pub fn ofvr_state_path(&self) -> Path {
+        self.ofvr_state_path
+            .clone()
+            .or(Some(self.from_file.with_extension(".ofvr")))
+            .unwrap()
+            .try_canonicalize()
+    }
+    pub fn commit_author(&self) -> Result<Author> {
+        let conf = Conf::load()?;
+        Ok(Author::from_conf(&conf))
+    }
 }
 #[derive(Args, Debug)]
 pub struct LogOpt {
@@ -36,26 +48,24 @@ pub struct LogOpt {
 }
 impl LogOpt {
     pub fn ofvr_state_path(&self) -> Path {
-        self.ofvr_state_path.clone()
+        self.ofvr_state_path.try_canonicalize()
     }
 }
-impl CommitOpt {
+#[derive(Args, Debug)]
+pub struct DiffOpt {
+    #[arg()]
+    pub from_file: Path,
+
+    #[arg(short, long)]
+    ofvr_state_path: Option<Path>,
+}
+impl DiffOpt {
     pub fn ofvr_state_path(&self) -> Path {
         self.ofvr_state_path
             .clone()
             .or(Some(self.from_file.with_extension(".ofvr")))
             .unwrap()
-    }
-    pub fn commit_author(&self) -> String {
-        match &self.commit_author {
-            Some(author) => author.to_string(),
-            None => [std::env::var("USER"), std::env::var("HOSTNAME")]
-                .iter()
-                .filter(|var| var.is_ok())
-                .map(|var| var.clone().unwrap().to_string())
-                .collect::<Vec<String>>()
-                .join("@"),
-        }
+            .try_canonicalize()
     }
 }
 
@@ -66,12 +76,12 @@ fn main() -> Result<()> {
             let (ofvr, commit) = if op.ofvr_state_path().is_file() {
                 let mut state = OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?;
                 let commit =
-                    state.commit(&op.from_file, &op.commit_author(), &op.commit_message)?;
+                    state.commit(&op.from_file, &op.commit_author()?, &op.commit_message)?;
                 (state, commit)
             } else {
                 let state = OFVRState::new_with_commit(
                     &op.ofvr_state_path(),
-                    &op.commit_author(),
+                    &op.commit_author()?,
                     &op.commit_message,
                     &op.from_file,
                 )?;
@@ -93,12 +103,27 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             };
             for (id, commit) in ofvr.commits().iter().enumerate() {
-                let id = ofvr.commits().len()-id;
+                let id = ofvr.commits().len() - id;
                 println!("Commit: {}", &id);
                 println!("Author: {}", &commit.author());
                 println!("Date: {}", &commit.date_rfc2822());
                 println!("\t{}\n", &commit.message());
             }
+        }
+        Command::Diff(op) => {
+            let ofvr = if op.ofvr_state_path().is_file() {
+                OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?
+            } else {
+                eprintln!("{} is not a file", op.ofvr_state_path());
+                std::process::exit(1);
+            };
+
+            let mut diff = match ofvr.latest_commit() {
+                Some(commit) => commit.diff(),
+                None => Diff::new(AxisBoundary::default()),
+            };
+            diff.update(&op.from_file.read_bytes()?)?;
+            println!("{}", diff.render());
         }
     }
     Ok(())

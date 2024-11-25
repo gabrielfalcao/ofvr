@@ -21,5 +21,11 @@ run commit -m 'test' tests/cargo-run.txt
 
 run log tests/cargo-run.ofvr
 
+cat >tests/cargo-run.txt <<EOF
+# ofvr commit 3 @ $(date)
+EOF
+
+run diff tests/cargo-run.txt
+
 g o -e "\033[1;38;5;154mcargo test\033[0m"
 cargo test
