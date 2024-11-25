@@ -16,7 +16,7 @@ use std::io::Write;
 pub struct Author {
     name: String,
     email: String,
-    private_key: RSAPrivateKey,
+    private_key: String,
 }
 impl std::fmt::Display for Author {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -24,12 +24,22 @@ impl std::fmt::Display for Author {
     }
 }
 impl Author {
-    // pub fn from_str(data: &str) -> Result<Author> { let regex = regex::Regex::new(r"^(\w+(\s\w+)*)\s+[<]([A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+[.][a-z][a-z0-9]+)[>]$").expect("valid regex"); let matches = regex.captures(data); match regex { None => Err(Error::DecodeError(format!( "invalid author address {:#?}", data ))), Some(matches) => { let name = matches.get(0).unwrap().as_str().to_string(); let email = matches.get(1).unwrap().as_str().to_string(); Ok(Author { name, email, private_key: RSAPrivateKey::generate()?, }) } } }
+    pub fn new(name: &str, email: &str) -> Result<Author> {
+        Ok(Author {
+            name: name.to_string(),
+            email: email.to_string(),
+            private_key: hex::encode(RSAPrivateKey::generate()?.to_flate_bytes()?)
+        })
+    }
     pub fn from_conf(conf: &Conf) -> Author {
         conf.author()
     }
-    pub fn public_key(&self) -> RSAPublicKey {
-        self.private_key.public_key()
+    pub fn private_key(&self) -> Result<RSAPrivateKey> {
+        let bytes = hex::decode(&self.private_key)?;
+        Ok(RSAPrivateKey::from_deflate_bytes(&bytes)?)
+    }
+    pub fn public_key(&self) -> Result<RSAPublicKey> {
+        Ok(self.private_key()?.public_key())
     }
 }
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
@@ -172,7 +182,7 @@ impl OFVRState {
         };
         let ancestor_key = match self.latest_commit() {
             Some(commit) => commit.signing_key.public_key(),
-            None => author.private_key.public_key(),
+            None => author.public_key()?,
         };
         diff.update(data)?;
         let commit = Commit::now(diff, author, message, &self.path, &ancestor_key)?;

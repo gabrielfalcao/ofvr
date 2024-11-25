@@ -1311,7 +1311,6 @@ dependencies = [
  "md5",
  "pqpfs",
  "rand",
- "regex",
  "rsa",
  "sanitation",
  "security-framework",
