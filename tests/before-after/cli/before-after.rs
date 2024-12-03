@@ -1,4 +1,4 @@
 fn main() {
-    let argv = dbg!(std::env::args().collect::<Vec<String>>());
+    let argv: Vec<String> = std::env::args().collect();
     println!("{}", argv[1..].join(" "));
 }

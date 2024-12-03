@@ -58,3 +58,28 @@ required-features = []
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin)'] }
+
+# [profile.release]
+# lto = true
+# overflow-checks = true
+# panic = "unwind"
+# strip = true
+
+# [profile.bench]
+# debug = true
+# lto = true
+# overflow-checks = true
+# strip = false
+
+# [profile.test]
+# debug = true
+# lto = true
+# overflow-checks = true
+# strip = false
+
+# [profile.dev]
+# debug = true
+# lto = true
+# overflow-checks = true
+# panic = "unwind"
+# strip = false

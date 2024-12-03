@@ -73,27 +73,14 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
         Command::Commit(op) => {
-            let (_ofvr_, commit) = if op.ofvr_state_path().is_file() {
-                let mut state = OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?;
-                let commit =
-                    state.commit(&op.from_file, &op.commit_author()?, &op.commit_message)?;
-                (state, commit)
+            let mut ofvr = if op.ofvr_state_path().is_file() {
+                OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?
             } else {
-                let state = OFVRState::new_with_commit(
-                    &op.ofvr_state_path(),
-                    &op.commit_author()?,
-                    &op.commit_message,
-                    &op.from_file,
-                )?;
-                (
-                    state.clone(),
-                    state.latest_commit().expect("newly created commit"),
-                )
+                OFVRState::empty(&op.ofvr_state_path(), &op.commit_author()?)?
             };
-            println!("Commit: {}", &commit.id()?);
-            println!("Author: {}", &commit.author());
-            println!("Date: {}", &commit.date_rfc2822());
-            println!("\t{}\n", &commit.message());
+            ofvr.commit(&op.from_file, &op.commit_author()?, &op.commit_message)?;
+            let commit = ofvr.latest_commit().expect("latest commit");
+            println!("{}", commit.log(&ofvr)?);
         }
         Command::Log(op) => {
             let ofvr = if op.ofvr_state_path().is_file() {
@@ -103,10 +90,7 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             };
             for commit in ofvr.commits().iter() {
-                println!("Commit: {}", &commit.id()?);
-                println!("Author: {}", &commit.author());
-                println!("Date: {}", &commit.date_rfc2822());
-                println!("\t{}\n", &commit.message());
+                println!("{}", commit.log(&ofvr)?);
             }
         }
         Command::Diff(op) => {
@@ -118,7 +102,7 @@ fn main() -> Result<()> {
             };
 
             let mut diff = match ofvr.latest_commit() {
-                Some(commit) => commit.diff(),
+                Some(commit) => commit.data(&ofvr)?.diff(),
                 None => Diff::new(AxisBoundary::default()),
             };
             diff.update(&op.from_file.read_bytes()?)?;

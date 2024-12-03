@@ -14,6 +14,7 @@ pub enum Error {
     PQPFSError(String),
     BincodeError(String),
     TomlError(String),
+    StateError(String),
 }
 
 impl Serialize for Error {
@@ -43,6 +44,7 @@ impl Display for Error {
                 Self::PQPFSError(s) => format!("{}", s),
                 Self::BincodeError(s) => format!("{}", s),
                 Self::TomlError(s) => format!("{}", s),
+                Self::StateError(s) => format!("{}", s),
             }
         )
     }
@@ -58,6 +60,7 @@ impl Error {
             Error::IOError(_) => "IOError",
             Error::BincodeError(_) => "BincodeError",
             Error::TomlError(_) => "TomlError",
+            Error::StateError(_) => "StateError",
             Error::PQPFSError(_) => "PQPFSError",
         }
         .to_string()
