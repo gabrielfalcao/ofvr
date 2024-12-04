@@ -1,3 +1,5 @@
 /target
 *.ofvrf
 /tests/cargo-run*
+*.conf
+*.ky
