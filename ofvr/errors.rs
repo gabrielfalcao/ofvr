@@ -1,9 +1,9 @@
 use std::fmt::Display;
-
+use std::num::TryFromIntError;
 use serde::ser::SerializeStruct;
 use serde::{Serialize, Serializer};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Error {
     CommitError(String),
     DiffError(String),
@@ -106,7 +106,11 @@ impl From<toml::de::Error> for Error {
         Error::TomlError(format!("{}", e))
     }
 }
-
+impl From<TryFromIntError> for Error {
+    fn from(e: TryFromIntError) -> Self {
+        Error::DecodeError(format!("{}", e))
+    }
+}
 impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
