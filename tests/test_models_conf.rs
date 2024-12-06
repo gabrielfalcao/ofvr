@@ -2,7 +2,8 @@ use iocore::Path;
 use ofvr::errors::Error;
 use ofvr::models::author::Author;
 use ofvr::models::conf::Conf;
-
+use ofvr::traits::FileSystemBytes;
+use pqpfs::PlainBytes;
 
 #[test]
 fn test_conf_new() -> Result<(), Error> {
@@ -27,7 +28,10 @@ fn test_conf_to_bytes() -> Result<(), Error> {
 fn test_conf_key_path() -> Result<(), Error> {
     let path = Path::new(file!()).with_extension(".conf");
     assert_eq!(path.to_string(), "tests/test_models_conf.conf");
-    assert_eq!(Conf::key_path(&path).to_string(), "tests/.test_models_conf.ky");
+    assert_eq!(
+        Conf::key_path(&path).to_string(),
+        "tests/.test_models_conf.ky"
+    );
     Ok(())
 }
 
@@ -38,10 +42,12 @@ fn test_conf_save_and_load() -> Result<(), Error> {
     let path = Path::new(file!()).with_extension(".conf");
     let key_path = Conf::key_path(&path);
     conf.save_to_file(&path)?;
+
     assert_eq!(key_path.exists(), true);
     assert_eq!(key_path.is_file(), true);
     assert_eq!(path.exists(), true);
     assert_eq!(path.is_file(), true);
     assert_eq!(Conf::load_from_file(&path)?, conf);
+
     Ok(())
 }

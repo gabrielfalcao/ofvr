@@ -74,7 +74,7 @@ fn main() -> Result<()> {
     match args.command {
         Command::Commit(op) => {
             let mut ofvr = if op.ofvr_state_path().is_file() {
-                OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?
+                OFVRState::from_plain_bytes(&op.ofvr_state_path().read_bytes()?)?
             } else {
                 OFVRState::empty(&op.ofvr_state_path(), &op.commit_author()?)?
             };
@@ -84,7 +84,7 @@ fn main() -> Result<()> {
         }
         Command::Log(op) => {
             let ofvr = if op.ofvr_state_path().is_file() {
-                OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?
+                OFVRState::from_plain_bytes(&op.ofvr_state_path().read_bytes()?)?
             } else {
                 eprintln!("{} is not a file", op.ofvr_state_path());
                 std::process::exit(1);
@@ -95,7 +95,7 @@ fn main() -> Result<()> {
         }
         Command::Diff(op) => {
             let ofvr = if op.ofvr_state_path().is_file() {
-                OFVRState::from_bytes(&op.ofvr_state_path().read_bytes()?)?
+                OFVRState::from_plain_bytes(&op.ofvr_state_path().read_bytes()?)?
             } else {
                 eprintln!("{} is not a file", op.ofvr_state_path());
                 std::process::exit(1);

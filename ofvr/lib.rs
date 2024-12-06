@@ -9,3 +9,7 @@ pub use io::*;
 
 pub mod hash;
 pub use hash::*;
+
+
+pub mod traits;
+pub use traits::*;

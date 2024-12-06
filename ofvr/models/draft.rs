@@ -121,14 +121,14 @@ impl CommitData {
         Ok(ID::new(keccak256.to_vec()))
     }
 
-    pub fn to_bytes<K: EncryptionKey>(&self, encryption_key: K) -> Result<Vec<u8>> {
+    pub fn to_plain_bytes<K: EncryptionKey>(&self, encryption_key: K) -> Result<Vec<u8>> {
         let bytes = to_flate_bytes(self)?;
         Ok(encryption_key.encrypt(bytes.iter().map(|s| *s))?.into())
     }
 
-    pub fn from_bytes<K: DecryptionKey>(bytes: &[u8], decryption_key: K) -> Result<CommitData> {
+    pub fn from_plain_bytes<K: DecryptionKey>(bytes: &[u8], decryption_key: K) -> Result<CommitData> {
         let data = decryption_key.decrypt(bytes.iter().map(|s| *s))?;
-        Ok(from_deflate_bytes::<CommitData>(&data.to_bytes())?)
+        Ok(from_deflate_bytes::<CommitData>(&data.to_plain_bytes())?)
     }
 }
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
@@ -159,7 +159,7 @@ impl Commit {
     pub fn data(&self, ofvr: &OFVRState) -> Result<CommitData> {
         let id = self.id();
         match ofvr.get_decryption_key_for_commit(&id)? {
-            Some(decryption_key) => Ok(CommitData::from_bytes(&self.data, decryption_key)?),
+            Some(decryption_key) => Ok(CommitData::from_plain_bytes(&self.data, decryption_key)?),
             None => Err(Error::StateError(format!("no commit matching {}", &id))),
         }
     }
@@ -176,7 +176,7 @@ impl Commit {
     ) -> Result<Commit> {
         let commit_data = CommitData::new(date, diff, author, message, path)?;
         let encryption_key = commit_data.decryption_key().public_key();
-        let data = commit_data.to_bytes(encryption_key.clone())?;
+        let data = commit_data.to_plain_bytes(encryption_key.clone())?;
         let author = ofvr.get_author(author)?.public_key()?;
         let id = commit_data.id()?;
         Ok(Commit {
@@ -302,7 +302,7 @@ impl OFVRState {
         })
     }
     pub fn store(&self) -> Result<()> {
-        self.path.write(&self.to_bytes()?.to_vec())?;
+        self.path.write(&self.to_plain_bytes()?.to_vec())?;
         Ok(())
     }
     pub fn path(&self) -> Path {
@@ -310,9 +310,9 @@ impl OFVRState {
     }
     pub fn from_path(path: &Path) -> Result<OFVRState> {
         let data = read_data(path)?;
-        Ok(OFVRState::from_bytes(&data)?)
+        Ok(OFVRState::from_plain_bytes(&data)?)
     }
-    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+    pub fn to_plain_bytes(&self) -> Result<Vec<u8>> {
         let bytes = bincode::serialize(self)
             .map_err(|e| Error::EncodeError(e.to_string()))?
             .bytes()
@@ -322,7 +322,7 @@ impl OFVRState {
         e.write_all(&bytes.to_vec())?;
         Ok(e.finish()?)
     }
-    pub fn from_bytes(bytes: &[u8]) -> Result<OFVRState> {
+    pub fn from_plain_bytes(bytes: &[u8]) -> Result<OFVRState> {
         let mut d = DeflateDecoder::new(Vec::new());
         d.write(bytes)?;
         let deflated = d.finish()?;

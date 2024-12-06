@@ -60,6 +60,7 @@ required-features = []
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin)'] }
 
 [dev-dependencies]
+mockall = "0.13.1"
 test-harness = "0.3.0"
 
 # [profile.release]

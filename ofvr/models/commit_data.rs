@@ -1,10 +1,9 @@
 use crate::models::author::Author;
-use crate::Result;
+use crate::models::state::OFVRState;
+use crate::{FileSystemBytes, Result};
 use gdiff::Diff;
 use iocore::Path;
-use pqpfs::{
-    from_deflate_bytes, to_flate_bytes, DecryptionKey, EncryptionKey, PlainBytes, RSAPrivateKey, ID,
-};
+use pqpfs::{PlainBytes, RSAPrivateKey, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
@@ -29,6 +28,9 @@ impl CommitData {
     }
     pub fn author(&self, ofvr: &OFVRState) -> Result<Author> {
         Ok(ofvr.get_author(self.author)?)
+    }
+    pub fn author_id(&self) -> u16 {
+        self.author
     }
     pub fn date_rfc2822(&self) -> String {
         self.date().to_chrono().to_rfc2822()
@@ -60,24 +62,23 @@ impl CommitData {
             decryption_key,
         })
     }
-    pub fn now(diff: Diff, author: u16, message: &str, path: &Path) -> Result<CommitData> {
-        let date = t16::Data::now();
-        CommitData::new(&date, diff, author, message, path)
-    }
     pub fn id(&self) -> Result<ID> {
-        let mut keccak256 = Keccak256::new();
-        keccak256.update(&to_flate_bytes(self)?);
-        let keccak256 = keccak256.finalize();
-        Ok(ID::new(keccak256.to_vec()))
+        Ok(ID::new(crate::hash::keccak256(&self.to_flate_bytes()?)))
     }
-
-    pub fn to_bytes<K: EncryptionKey>(&self, encryption_key: K) -> Result<Vec<u8>> {
-        let bytes = to_flate_bytes(self)?;
-        Ok(encryption_key.encrypt(bytes.iter().map(|s| *s))?.into())
+    pub fn date_rfc3339(&self) -> String {
+        self.date().to_chrono().to_rfc3339()
     }
-
-    pub fn from_bytes<K: DecryptionKey>(bytes: &[u8], decryption_key: K) -> Result<CommitData> {
-        let data = decryption_key.decrypt(bytes.iter().map(|s| *s))?;
-        Ok(from_deflate_bytes::<CommitData>(&data.to_bytes())?)
+}
+impl PlainBytes for CommitData {
+    fn to_bytes(&self) -> Vec<u8> {
+        self.to_plain_bytes()
+    }
+    fn from_bytes(bytes: &[u8]) -> Self {
+        Self::from_plain_bytes(bytes).expect("CommitData::from_plain_bytes")
+    }
+}
+impl FileSystemBytes for CommitData {
+    fn default_path() -> Path {
+        Path::cwd().join("...")
     }
 }

@@ -1,12 +1,8 @@
 use crate::models::author::Author;
-use crate::Result;
+use crate::traits::FileSystemBytes;
 use iocore::Path;
-use pqpfs::{
-    from_deflate_bytes, to_flate_bytes, DecryptionKey, EncryptionKey, PlainBytes, RSAPrivateKey,
-};
+use pqpfs::PlainBytes;
 use serde::{Deserialize, Serialize};
-
-const CONF_HOME: &'static str = "~/.ofvr";
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Conf {
@@ -19,39 +15,18 @@ impl Conf {
     pub fn author(&self) -> Author {
         self.author.clone()
     }
-    pub fn key_path(conf_path: &Path) -> Path {
-        let key_path = conf_path.with_extension(".ky");
-        key_path.with_filename(&format!(".{}", &key_path.name()))
+}
+
+impl PlainBytes for Conf {
+    fn to_bytes(&self) -> Vec<u8> {
+        self.to_plain_bytes()
     }
-    pub fn load_from_file(path: impl Into<Path>) -> Result<Conf> {
-        let path = path.into();
-        let key_path = Conf::key_path(&path);
-        let private_key = RSAPrivateKey::from_deflate_bytes(&key_path.read_bytes()?)?;
-        let ciphertext = path.read_bytes()?;
-        let plaintext = private_key.decrypt(ciphertext.iter().map(|byte| *byte))?;
-        Ok(bincode::deserialize::<Conf>(&plaintext.to_bytes())?)
+    fn from_bytes(bytes: &[u8]) -> Self {
+        Self::from_plain_bytes(bytes).expect("Conf::from_plain_bytes")
     }
-    pub fn load() -> Result<Conf> {
-        Conf::load_from_file(CONF_HOME)
-    }
-    pub fn save_to_file(&self, path: impl Into<Path>) -> Result<()> {
-        let path = path.into();
-        let key_path = Conf::key_path(&path);
-        let private_key = RSAPrivateKey::generate()?;
-        let public_key = private_key.public_key();
-        let bytes = bincode::serialize::<Conf>(self)?;
-        let bytes = public_key.encrypt(bytes.iter().map(|byte| *byte))?;
-        key_path.write(&private_key.to_flate_bytes()?)?;
-        path.write(&bytes.to_bytes())?;
-        Ok(())
-    }
-    pub fn save(&self) -> Result<()> {
-        Ok(self.save_to_file(CONF_HOME)?)
-    }
-    pub fn to_flate_bytes(&self) -> Result<Vec<u8>> {
-        Ok(to_flate_bytes(self)?)
-    }
-    pub fn from_deflate_bytes(bytes: &[u8]) -> Result<Conf> {
-        Ok(from_deflate_bytes::<Conf>(bytes)?)
+}
+impl FileSystemBytes for Conf {
+    fn default_path() -> Path {
+        Path::new("~/.ofvr").try_canonicalize()
     }
 }
