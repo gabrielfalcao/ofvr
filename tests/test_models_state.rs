@@ -9,6 +9,8 @@ fn test_state() -> Result<(), Error> {
     let path = Path::new(file!()).with_extension(".ofvrf");
     let mut state = OFVRState::empty(&path, &author)?;
 
+    assert_eq!(&state.path(), &path);
+
     let author_id: u16 = state.get_author_id(&author)?;
     assert_eq!(state.get_author(author_id)?, author);
 
@@ -26,8 +28,10 @@ fn test_state() -> Result<(), Error> {
         state.get_author(author_qa_id).err().expect("error"),
         Error::StateError(format!("author {} NOT present in state", author_qa_id))
     );
+    assert!(state.commits().is_empty());
 
     state.store()?;
     assert_eq!(OFVRState::from_path(&path)?, state);
-    Ok(())
+
+Ok(())
 }

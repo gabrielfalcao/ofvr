@@ -2,6 +2,7 @@ use gdiff::{AxisBoundary, Diff};
 use iocore::Path;
 use ofvr::errors::Error;
 use ofvr::models::author::Author;
+use ofvr::models::commit::Commit;
 use ofvr::models::commit_data::CommitData;
 use ofvr::models::state::OFVRState;
 
@@ -21,13 +22,17 @@ fn test_commit() -> Result<(), Error> {
 
     let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com")?;
     let state_path = Path::new(file!()).with_extension(".state");
-    let state = OFVRState::empty(&state_path, &author)?;
+    let mut state = OFVRState::empty(&state_path, &author)?;
+
+    assert!(state.commits().is_empty());
 
     let commit_data = CommitData::new(&data, diff, author.id(), "test_commit_data", &path)?;
+    let commit = Commit::new(commit_data, &state)?;
 
-    assert_eq!(commit_data.date_rfc2822(), "Fri, 7 Mar 5541 15:15:15 +0000");
-    assert_eq!(commit_data.date_rfc3339(), "5541-03-07T15:15:15.294967299+00:00");
+    state.add_commit(commit);
 
-    assert_eq!(commit_data.author(&state)?, author);
+    assert!(state.first_commit().is_some());
+    assert_eq!(state.latest_commit(), state.first_commit());
+
     Ok(())
 }

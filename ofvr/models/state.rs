@@ -90,6 +90,42 @@ impl OFVRState {
         let data = read_data(path)?;
         Ok(OFVRState::from_plain_bytes(&data)?)
     }
+    pub fn commits(&self) -> &[Commit] {
+        &self.commits
+    }
+    pub fn add_commit(&mut self, commit: Commit) {
+        self.commits.push(commit)
+    }
+    pub fn latest_commit(&self) -> Option<Commit> {
+        match self.commits.last() {
+            Some(commit) => Some(commit.clone()),
+            None => None,
+        }
+    }
+    pub fn first_commit(&self) -> Option<Commit> {
+        match self.commits.first() {
+            Some(commit) => Some(commit.clone()),
+            None => None,
+        }
+    }
+}
+
+impl OFVRState {
+    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<()> {
+        let data = read_data(&data_path)?;
+        self.commit_blob(&data, author, message)
+    }
+    pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<()> {
+        let mut diff = match self.latest_commit() {
+            Some(commit) => commit.data(&self)?.diff(),
+            None => Diff::new(AxisBoundary::default()),
+        };
+        diff.update(data)?;
+        let commit = Commit::now(diff, self.get_author_id(author)?, message, &self.path, self)?;
+        self.commits.push(commit);
+        self.store()?;
+        Ok(())
+    }
     pub fn get_decryption_key_for_commit(&self, id: &ID) -> Result<Option<RSAPrivateKey>> {
         for commit in &self.commits {
             if commit.id() == *id {
@@ -109,36 +145,6 @@ impl OFVRState {
             Some(commit) => commit.public_key(),
             None => self.get_author(author)?.public_key(),
         })
-    }
-    pub fn latest_commit(&self) -> Option<Commit> {
-        match self.commits.last() {
-            Some(commit) => Some(commit.clone()),
-            None => None,
-        }
-    }
-    pub fn first_commit(&self) -> Option<Commit> {
-        match self.commits.first() {
-            Some(commit) => Some(commit.clone()),
-            None => None,
-        }
-    }
-    pub fn commits(&self) -> &[Commit] {
-        &self.commits
-    }
-    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<()> {
-        let data = read_data(&data_path)?;
-        self.commit_blob(&data, author, message)
-    }
-    pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<()> {
-        let mut diff = match self.latest_commit() {
-            Some(commit) => commit.data(&self)?.diff(),
-            None => Diff::new(AxisBoundary::default()),
-        };
-        diff.update(data)?;
-        let commit = Commit::now(diff, self.get_author_id(author)?, message, &self.path, self)?;
-        self.commits.push(commit);
-        self.store()?;
-        Ok(())
     }
 }
 impl PlainBytes for OFVRState {
