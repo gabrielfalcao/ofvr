@@ -8,31 +8,35 @@ pub trait FileSystemBytes: PlainBytes {
         let key_path = path.with_extension(".ky");
         key_path.with_filename(&format!(".{}", &key_path.name()))
     }
-    fn load_from_file(path: impl Into<Path>) -> Result<Self> {
-        let path = path.into();
-        // let key_path = Self::key_path(&path);
-        // let private_key = RSAPrivateKey::from_deflate_bytes(&key_path.read_bytes()?)?;
-        // let ciphertext = path.read_bytes()?;
-        // let plaintext = private_key.decrypt(ciphertext.iter().map(|byte| *byte))?;
-        // Ok(Self::from_deflate_bytes(&plaintext.to_plain_bytes())?)
-        Ok(Self::from_bytes(&path.read_bytes()?))
+    fn save_new_key_for_path(path: &Path) -> Result<RSAPrivateKey> {
+        let key_path = Self::key_path(path);
+        let private_key = RSAPrivateKey::generate()?;
+        key_path.write(&private_key.to_bytes())?;
+        Ok(private_key)
     }
-    fn load() -> Result<Self> {
-        Self::load_from_file(Self::default_path())
+    fn load_key_for_path(path: &Path) -> Result<RSAPrivateKey> {
+        let key_path = Self::key_path(path);
+        let key = RSAPrivateKey::from_bytes(&key_path.read_bytes()?);
+        Ok(key)
     }
     fn save_to_file(&self, path: impl Into<Path>) -> Result<()> {
         let path = path.into();
-        // let key_path = Self::key_path(&path);
-        // let private_key = RSAPrivateKey::generate()?;
-        // let public_key = private_key.public_key();
-        // let bytes = self.to_flate_bytes()?;
-        // let bytes = public_key.encrypt(bytes.iter().map(|byte| *byte))?;
-        // key_path.write(&private_key.to_flate_bytes()?)?;
-        // path.write(&bytes.to_plain_bytes())?;
-        path.write(&self.to_bytes())?;
+        let key = Self::save_new_key_for_path(&path)?;
+        let bytes = key.encrypt(self.to_bytes().iter().map(|byte| *byte))?;
+        path.write(&bytes.to_bytes())?;
         Ok(())
     }
     fn save(&self) -> Result<()> {
         Ok(self.save_to_file(Self::default_path())?)
+    }
+    fn load_from_file(path: impl Into<Path>) -> Result<Self> {
+        let path = path.into();
+        let key = Self::load_key_for_path(&path)?;
+        let ciphertext = path.read_bytes()?;
+        let plaintext = key.decrypt(ciphertext.iter().map(|byte| *byte))?;
+        Ok(Self::from_bytes(&plaintext.to_bytes()))
+    }
+    fn load() -> Result<Self> {
+        Self::load_from_file(Self::default_path())
     }
 }

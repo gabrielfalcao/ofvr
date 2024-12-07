@@ -47,7 +47,7 @@ toml = "0.8.19"
 [lib]
 name = "ofvr"
 path = "ofvr/lib.rs"
-test = true
+test = false
 doctest = false
 bench = false
 doc = false

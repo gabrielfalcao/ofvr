@@ -36,6 +36,15 @@ fn test_conf_key_path() -> Result<(), Error> {
 }
 
 #[test]
+fn test_conf_save_and_load_key_for_path() -> Result<(), Error> {
+    let path = Path::new(file!()).with_extension(".ld");
+    let private_key = Conf::save_new_key_for_path(&path)?;
+    assert_eq!(Conf::load_key_for_path(&path)?,
+               private_key);
+    Ok(())
+}
+
+#[test]
 fn test_conf_save_and_load() -> Result<(), Error> {
     let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
     let conf = Conf::new(author);

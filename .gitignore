@@ -1,5 +1,6 @@
 /target
 *.ofvrf
-/tests/cargo-run*
 *.conf
 *.ky
+/tests/cargo-run*
+*.state

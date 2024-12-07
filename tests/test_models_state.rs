@@ -6,7 +6,7 @@ use ofvr::models::state::OFVRState;
 #[test]
 fn test_state() -> Result<(), Error> {
     let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
-    let path = Path::new(file!()).with_extension(".state");
+    let path = Path::new(file!()).with_extension(".ofvrf");
     let mut state = OFVRState::empty(&path, &author)?;
 
     let author_id: u16 = state.get_author_id(&author)?;
@@ -26,5 +26,8 @@ fn test_state() -> Result<(), Error> {
         state.get_author(author_qa_id).err().expect("error"),
         Error::StateError(format!("author {} NOT present in state", author_qa_id))
     );
+
+    state.store()?;
+    assert_eq!(OFVRState::from_path(&path)?, state);
     Ok(())
 }

@@ -1,14 +1,15 @@
 // #![allow(unused)]
 // use iocore::Path;
 // use ofvr::{Author, OFVRState};
-//
+// use pqpfs::{PlainBytes, EncryptionKey, DecryptionKey};
+
 // fn get_tests_path() -> Path {
 //     Path::new(file!())
 //         .try_canonicalize()
 //         .parent()
 //         .expect("./tests/")
 // }
-//
+
 // fn test_file_path(name: &str) -> Path {
 //     get_tests_path().join(name)
 // }
@@ -17,31 +18,31 @@
 //         .read_bytes()
 //         .expect(&format!("read bytes from {}", name))
 // }
-//
-// // #[test]
-// // fn test_empty_commit() {
-// //     let author =
-// //         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
-// //     let state = OFVRState::empty(&Path::new(file!()), &author).expect("new state");
-// //     assert_eq!(state.latest_commit().is_some(), false);
-// // }
-//
-// // #[test]
-// // fn test_new_commit_blob() {
-// //     let author =
-// //         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
-// //     let mut state =
-// //         OFVRState::empty(&test_file_path("test.commit.ofvrf"), &author).expect("new state");
-// //     let commit = state
-// //         .commit_blob(
-// //             &read_test_file_path("before-after/target/release/before-after"),
-// //             &author,
-// //             "release binary",
-// //         )
-// //         .expect("new commit");
-// //     assert_eq!(state.latest_commit(), Some(commit));
-// // }
-//
+
+// #[test]
+// fn test_empty_commit() {
+//     let author =
+//         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
+//     let state = OFVRState::empty(&Path::new(file!()), &author).expect("new state");
+//     assert_eq!(state.latest_commit().is_some(), false);
+// }
+
+// #[test]
+// fn test_new_commit_blob() {
+//     let author =
+//         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
+//     let mut state =
+//         OFVRState::empty(&test_file_path("test.commit.ofvrf"), &author).expect("new state");
+//     let commit = state
+//         .commit_blob(
+//             &read_test_file_path("before-after/target/release/before-after"),
+//             &author,
+//             "release binary",
+//         )
+//         .expect("success");
+//     assert!(state.latest_commit().is_some())
+// }
+
 // #[test]
 // fn test_commit_from_file() {
 //     let author =
@@ -55,14 +56,14 @@
 //             "debug binary",
 //         )
 //         .expect("first commit");
-//
+
 //     let first_commit = state.first_commit();
 //     assert_eq!(state.first_commit(), first_commit);
 //     assert_eq!(state.first_commit(), state.latest_commit());
-//
-//     // assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) >= 43918, true);
-//     // assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) <= 43922, true);
-//
+
+//     assert!(dbg!(state.to_bytes().len()) >= 43918);
+//     assert!(dbg!(state.to_bytes().len()) <= 43922);
+
 //     state
 //         .commit(
 //             &test_file_path("before-after/target/release/before-after"),
@@ -71,9 +72,7 @@
 //         )
 //         .expect("latest commit");
 //     assert_eq!(state.latest_commit(), state.first_commit());
-//
-//     assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) >= 46016, true);
-//     assert_eq!(dbg!(state.to_bytes().expect("bytes").len()) <= 46020, true);
-//
+
+//     assert!(dbg!(state.to_bytes().len()) >= 46016);
+//     assert!(dbg!(state.to_bytes().len()) <= 46020);
 // }
-//

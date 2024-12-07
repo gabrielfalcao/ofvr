@@ -44,8 +44,8 @@ impl EncryptionKey for Author {
     }
 }
 impl DecryptionKey for Author {
-    fn decrypt_bytes(&self, bytes: &[u8]) -> pqpfs::Result<DataSeq> {
-        self.private_key().decrypt_bytes(bytes)
+    fn decrypt_bytes(&self, data: DataSeq) -> pqpfs::Result<DataSeq> {
+        self.private_key().decrypt_bytes(data)
     }
 }
 impl PlainBytes for Author {
