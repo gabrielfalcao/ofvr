@@ -1,31 +1,23 @@
-// #![allow(unused)]
-// use iocore::Path;
-// use ofvr::{Author, OFVRState};
-// use pqpfs::{PlainBytes, EncryptionKey, DecryptionKey};
+#![allow(unused)]
+use iocore::Path;
+use ofvr::{Author, OFVRState};
+use pqpfs::{PlainBytes, EncryptionKey, DecryptionKey};
 
-// fn get_tests_path() -> Path {
-//     Path::new(file!())
-//         .try_canonicalize()
-//         .parent()
-//         .expect("./tests/")
-// }
+fn get_tests_path() -> Path {
+    Path::new(file!())
+        .try_canonicalize()
+        .parent()
+        .expect("./tests/")
+}
 
-// fn test_file_path(name: &str) -> Path {
-//     get_tests_path().join(name)
-// }
-// fn read_test_file_path(name: &str) -> Vec<u8> {
-//     test_file_path(name)
-//         .read_bytes()
-//         .expect(&format!("read bytes from {}", name))
-// }
-
-// #[test]
-// fn test_empty_commit() {
-//     let author =
-//         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
-//     let state = OFVRState::empty(&Path::new(file!()), &author).expect("new state");
-//     assert_eq!(state.latest_commit().is_some(), false);
-// }
+fn test_file_path(name: &str) -> Path {
+    get_tests_path().join(name)
+}
+fn read_test_file_path(name: &str) -> Vec<u8> {
+    test_file_path(name)
+        .read_bytes()
+        .expect(&format!("read bytes from {}", name))
+}
 
 // #[test]
 // fn test_new_commit_blob() {

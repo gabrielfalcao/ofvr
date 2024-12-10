@@ -6,7 +6,7 @@ use ofvr::models::state::OFVRState;
 #[test]
 fn test_state() -> Result<(), Error> {
     let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
-    let path = Path::new(file!()).with_extension(".ofvrf");
+    let path = Path::new(file!()).with_extension(".test_state.ofvrf");
     let mut state = OFVRState::empty(&path, &author)?;
 
     assert_eq!(&state.path(), &path);
@@ -33,5 +33,23 @@ fn test_state() -> Result<(), Error> {
     state.store()?;
     assert_eq!(OFVRState::from_path(&path)?, state);
 
-Ok(())
+    Ok(())
+}
+
+#[test]
+fn test_state_commit_blob() -> Result<(), Error> {
+    let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
+    let path = Path::new(file!()).with_extension(".test_state_commit_blob.ofvrf");
+    let mut state = OFVRState::empty(&path, &author)?;
+
+    assert!(state.commits().is_empty());
+    let data = vec![0, 0, 0, 0, 0, 0, 0];
+    state.commit_blob(&data, &author, "Commit 1")?;
+
+    assert_eq!(state.commits().len(), 1);
+    let data = vec![1, 1, 1, 1, 1, 1, 1];
+    state.commit_blob(&data, &author, "Commit N")?;
+
+    assert_eq!(state.commits().len(), 2);
+    Ok(())
 }

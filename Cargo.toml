@@ -5,7 +5,6 @@ name = "ofvr"
 version = "0.1.0"
 edition = "2021"
 autobins = false
-autoexamples = false
 autobenches = false
 default-target = "aarch64-apple-darwin"
 

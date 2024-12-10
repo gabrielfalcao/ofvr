@@ -108,13 +108,6 @@ impl OFVRState {
             None => None,
         }
     }
-}
-
-impl OFVRState {
-    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<()> {
-        let data = read_data(&data_path)?;
-        self.commit_blob(&data, author, message)
-    }
     pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<()> {
         let mut diff = match self.latest_commit() {
             Some(commit) => commit.data(&self)?.diff(),
@@ -122,15 +115,28 @@ impl OFVRState {
         };
         diff.update(data)?;
         let commit = Commit::now(diff, self.get_author_id(author)?, message, &self.path, self)?;
-        self.commits.push(commit);
+        self.add_commit(commit);
         self.store()?;
         Ok(())
     }
+}
+
+impl OFVRState {
+    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<()> {
+        let data = read_data(&data_path)?;
+        self.commit_blob(&data, author, message)
+    }
     pub fn get_decryption_key_for_commit(&self, id: &ID) -> Result<Option<RSAPrivateKey>> {
-        for commit in &self.commits {
-            if commit.id() == *id {
-                return Ok(Some(commit.data(self)?.decryption_key()));
+        let mut pos = 0;
+        let len = self.commits.len();
+        if len == 0 {
+            return Err(Error::StateError(String::from("no commits present in the current state")))
+        }
+        while pos < len {
+            if &self.commits[pos].id == id {
+                return Ok(Some(self.commits[pos].data(self)?.decryption_key()));
             }
+            pos += 1;
         }
         Ok(None)
     }

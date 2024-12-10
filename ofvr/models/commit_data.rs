@@ -7,14 +7,19 @@ use pqpfs::{PlainBytes, RSAPrivateKey, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct CommitData {
     date: t16::Data,
     diff: Diff,
     message: String,
     path: Path,
     author: u16,
-    decryption_key: RSAPrivateKey,
+    pub decryption_key: RSAPrivateKey,
+}
+impl PartialEq for CommitData {
+    fn eq(&self, other: &Self) -> bool {
+        self.decryption_key == other.decryption_key
+    }
 }
 impl CommitData {
     pub fn date(&self) -> t16::Data {

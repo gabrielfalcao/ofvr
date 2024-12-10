@@ -8,6 +8,7 @@ pub struct Author {
     email: String,
     private_key: RSAPrivateKey,
 }
+
 impl std::fmt::Display for Author {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} <{}>", &self.name, &self.email)

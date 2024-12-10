@@ -9,40 +9,41 @@ use pqpfs::{DecryptionKey, EncryptionKey, PlainBytes, RSAPublicKey, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Commit {
-    id: ID,
+    pub id: ID,
     data: Vec<u8>,
     author: u16,
     encryption_key: RSAPublicKey,
+}
+impl PartialEq for Commit {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 impl Commit {
     pub fn log(&self, ofvr: &OFVRState) -> Result<String> {
         let data = self.data(ofvr)?;
         Ok([
-            format!("Commit: {}", self.id().to_hex("", false)),
+            format!("Commit: {}", self.id.to_hex("", false)),
             format!("Author: {}", &self.author(&ofvr)?),
             format!("Date: {}", data.date_rfc2822()),
             format!("\t{}\n", data.message()),
         ]
         .join("\n"))
     }
-    pub fn id(&self) -> ID {
-        self.id.clone()
-    }
     pub fn public_key(&self) -> RSAPublicKey {
         self.encryption_key.clone()
     }
     pub fn data(&self, ofvr: &OFVRState) -> Result<CommitData> {
-        let id = self.id();
-        match ofvr.get_decryption_key_for_commit(&id)? {
+        match ofvr.get_decryption_key_for_commit(&self.id)? {
             Some(decryption_key) => Ok(CommitData::from_plain_bytes(
                 &decryption_key
                     .decrypt(self.data.iter().map(|byte| *byte))?
                     .to_plain_bytes(),
             )?),
-            None => Err(Error::StateError(format!("no commit matching {}", &id))),
+            None => Err(Error::StateError(format!("no commit matching {}", &self.id))),
         }
     }
     pub fn author(&self, ofvr: &OFVRState) -> Result<Author> {

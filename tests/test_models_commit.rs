@@ -36,3 +36,26 @@ fn test_commit() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[test]
+fn test_commit_now() -> Result<(), Error> {
+    let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com")?;
+    let state_path = Path::new(file!()).with_extension(".state");
+    let mut state = OFVRState::empty(&state_path, &author)?;
+
+    assert!(state.commits().is_empty());
+    let commit = Commit::now(
+        Diff::new(AxisBoundary::default()),
+        author.id(),
+        "test",
+        &Path::new(file!()),
+        &state,
+    )?;
+
+    state.add_commit(commit);
+
+    assert!(state.first_commit().is_some());
+    assert_eq!(state.latest_commit(), state.first_commit());
+
+    Ok(())
+}
