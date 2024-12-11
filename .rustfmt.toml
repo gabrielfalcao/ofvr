@@ -44,7 +44,7 @@ hard_tabs = false			# Use tab characters for indentation, spaces for alignment
 # tab_spaces = 2                        # Number of spaces per tab
 hex_literal_case = "Upper"		# Format hexadecimal integer literals
 show_parse_errors = true		#
-imports_granularity = "Crate"		# Merge or split imports to the provided granularity
+imports_granularity = "Module"		# Merge or split imports to the provided granularity
                                         # imports_granularity options: "Preserve": "Do not merge imports" /"Crate": "Use one `use` statement per crate" / "Module": "Use one `use` statement per module" / "Item": " Use one `use` statement per imported item" / "One":  Use one `use` statement including all items)
 imports_indent = "Block"		# Indent of imports
 imports_layout = "Mixed"		# Item layout inside a import block

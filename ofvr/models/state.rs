@@ -109,21 +109,21 @@ impl OFVRState {
         }
     }
 
-    pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<()> {
+    pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<Commit> {
         let mut diff = match self.latest_commit() {
             Some(commit) => commit.data(&self)?.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
         diff.update(data)?;
         let commit = Commit::now(diff, self.get_author_id(author)?, message, &self.path, self)?;
-        self.add_commit(commit);
+        self.add_commit(commit.clone());
         self.store()?;
-        Ok(())
+        Ok(commit)
     }
 }
 
 impl OFVRState {
-    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<()> {
+    pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<Commit> {
         let data = read_data(&data_path)?;
         self.commit_blob(&data, author, message)
     }
@@ -137,30 +137,35 @@ impl OFVRState {
         let mut decryption_key = self.private_key.clone();
         let mut commit = &self.commits[pos];
         let mut data = commit.encrypted_data();
-        let commit_data = Commit::decrypt_commit_data(&decryption_key, &data);
+        let commit_data = Commit::decrypt_commit_data(&decryption_key, data);
         if &commit.id == id {
             return Ok(Some(decryption_key));
         } else if len < 2 {
             return Err(Error::StateError(format!("no commits matching id {}", id)));
         }
-        if commit_data.is_none() {
-            return Err(Error::StateError(format!("failed to decrypt commit id {}", id)));
+        if let Err(error) = commit_data.clone() {
+            return Err(Error::StateError(format!(
+                "checking commit {}/{} failed to decrypt commit id {}: {}",
+                pos, len, id, error
+            )));
         }
         let mut commit_data = commit_data.unwrap();
         decryption_key = commit_data.decryption_key.clone();
         for pos in 1..len {
             commit = &self.commits[pos];
             data = commit.encrypted_data();
-            match Commit::decrypt_commit_data(&decryption_key, &data) {
-                None =>
-                    return Err(Error::StateError(format!("failed to decrypt commit id {}", id))),
-                Some(some_commit_data) => {
+            match Commit::decrypt_commit_data(&decryption_key, data) {
+                Err(error) =>
+                    return Err(Error::StateError(format!(
+                        "checking commit {}/{} failed to decrypt commit id {}: {}",
+                        pos, len, id, error
+                    ))),
+                Ok(some_commit_data) => {
                     commit_data = some_commit_data;
                     decryption_key = commit_data.decryption_key.clone();
                     if &commit.id == id {
                         return Ok(Some(decryption_key));
                     }
-
                 },
             }
         }

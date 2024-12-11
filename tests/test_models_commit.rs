@@ -1,10 +1,10 @@
 use gdiff::{AxisBoundary, Diff};
 use iocore::Path;
-use ofvr::{
-    errors::Error,
-    models::{author::Author, commit::Commit, commit_data::CommitData},
-};
-// use ofvr::{state::OFVRState};
+use ofvr::errors::Error;
+use ofvr::models::author::Author;
+use ofvr::models::commit::Commit;
+use ofvr::models::commit_data::CommitData;
+use ofvr::state::OFVRState;
 use pqpfs::RSAPrivateKey;
 
 #[test]
@@ -49,40 +49,40 @@ fn test_commit_encrypt_and_decrypt_commit_data() -> Result<(), Error> {
     let decrypted = Commit::decrypt_commit_data(&private_key, &encrypted);
     let decryption_failed = Commit::decrypt_commit_data(&private_key, &encrypted_01);
 
-    assert!(decrypted.is_some());
-    assert!(decryption_failed.is_none());
+    assert!(decrypted.is_ok());
+    assert!(decryption_failed.is_err());
     Ok(())
 }
-// #[test]
-// fn test_commit() -> Result<(), Error> {
-//     let data = t16::Data {
-//         mnat: u8::MAX,
-//         min: u8::MAX,
-//         sec: u8::MAX,
-//         stun: u8::MAX,
-//         tag: u8::MAX,
-//         yhre: u16::MAX,
-//         nano: u32::MAX,
-//     };
-//     let diff = Diff::new(AxisBoundary::default());
-//     let path = Path::new(file!());
+#[test]
+fn test_commit() -> Result<(), Error> {
+    let data = t16::Data {
+        mnat: u8::MAX,
+        min: u8::MAX,
+        sec: u8::MAX,
+        stun: u8::MAX,
+        tag: u8::MAX,
+        yhre: u16::MAX,
+        nano: u32::MAX,
+    };
+    let diff = Diff::new(AxisBoundary::default());
+    let path = Path::new(file!());
 
-//     let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com")?;
-//     let state_path = Path::new(file!()).with_extension(".state");
-//     let mut state = OFVRState::empty(&state_path, &author)?;
+    let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com")?;
+    let state_path = Path::new(file!()).with_extension(".state");
+    let mut state = OFVRState::empty(&state_path, &author)?;
 
-//     assert!(state.commits().is_empty());
+    assert!(state.commits().is_empty());
 
-//     let commit_data = CommitData::new(&data, diff, author.id(), "test_commit_data", &path)?;
-//     let commit = Commit::new(commit_data, &state)?;
+    let commit_data = CommitData::new(&data, diff, author.id(), "test_commit_data", &path)?;
+    let commit = Commit::new(commit_data, &state)?;
 
-//     state.add_commit(commit);
+    state.add_commit(commit);
 
-//     assert!(state.first_commit().is_some());
-//     assert_eq!(state.latest_commit(), state.first_commit());
+    assert!(state.first_commit().is_some());
+    assert_eq!(state.latest_commit(), state.first_commit());
 
-//     Ok(())
-// }
+    Ok(())
+}
 
 // #[test]
 // fn test_commit_now() -> Result<(), Error> {
