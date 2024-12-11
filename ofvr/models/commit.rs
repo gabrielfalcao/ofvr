@@ -40,9 +40,10 @@ impl Commit {
 
     pub fn data(&self, ofvr: &OFVRState) -> Result<CommitData> {
         match ofvr.get_decryption_key_for_commit(&self.id)? {
-            Some(decryption_key) => Ok(CommitData::from_plain_bytes(
-                &decryption_key.decrypt(self.data.iter().map(|byte| *byte))?.to_plain_bytes(),
-            )?),
+            Some(decryption_key) => match Commit::decrypt_commit_data(&decryption_key, &Data::from(&self.data)) {
+                Some(commit_data) => Ok(commit_data),
+                None => Err(Error::StateError(format!("failed to decrypt commit data from commit {}", &self.id))),
+            }
             None => Err(Error::StateError(format!("no commit matching {}", &self.id))),
         }
     }
