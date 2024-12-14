@@ -37,11 +37,11 @@ rand = "0.8.5"
 sequoia-openpgp = "1.21.2"
 toml = "0.8.19"
 
-# [[bin]]
-# name = "ofvr"
-# path = "ofvr.rs"
-# test = false
-# doctest = false
+[[bin]]
+name = "ofvr"
+path = "ofvr.rs"
+test = false
+doctest = false
 
 [lib]
 name = "ofvr"

@@ -9,7 +9,7 @@ rm -f tests/cargo-run.ofvr
 run() {
     g o -e "\033[1;38;5;220mofvr ${*}\033[0m"
     cargo build
-    rust-lldb target/debug/ofvr -- $*
+    target/debug/ofvr $* #rust-lldb target/debug/ofvr -- $*
 }
 cargo check -q
 
