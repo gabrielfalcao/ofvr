@@ -76,7 +76,7 @@ fn test_commit() -> Result<(), Error> {
     let commit_data = CommitData::new(&data, diff, author.id(), "test_commit_data", &path)?;
     let commit = Commit::new(commit_data, &state)?;
 
-    state.add_commit(commit);
+    state.add_commit(commit)?;
 
     assert!(state.first_commit().is_some());
     assert_eq!(state.latest_commit(), state.first_commit());
@@ -99,7 +99,7 @@ fn test_commit_now() -> Result<(), Error> {
         &state,
     )?;
 
-    state.add_commit(commit);
+    state.add_commit(commit)?;
 
     assert!(state.first_commit().is_some());
     assert_eq!(state.latest_commit(), state.first_commit());

@@ -37,24 +37,24 @@ fn test_state() -> Result<(), Error> {
     Ok(())
 }
 
-// #[test]
-// fn test_state_commit_blob() -> Result<(), Error> {
-//     let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
-//     let path = Path::new(file!()).with_extension(".test_state_commit_blob.ofvrf");
-//     let mut state = OFVRState::empty(&path, &author)?;
+#[test]
+fn test_state_commit_blob() -> Result<(), Error> {
+    let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
+    let path = Path::new(file!()).with_extension(".test_state_commit_blob.ofvrf");
+    let mut state = OFVRState::empty(&path, &author)?;
 
-//     assert!(state.commits().is_empty());
-//     let data = vec![0, 0, 0, 0, 0, 0, 0];
-//     let commit = state.commit_blob(&data, &author, "Commit 1")?;
+    assert!(state.commits().is_empty());
+    let data = vec![0, 0, 0, 0, 0, 0, 0];
+    let commit = state.commit_blob(&data, &author, "Commit 1")?;
 
-//     assert_eq!(state.commits().len(), 1);
+    assert_eq!(state.commits().len(), 1);
 
-//     let commit_data = commit.data(&state)?;
-//     assert_eq!(commit.id.clone(), commit_data.id()?);
+    let commit_data = commit.data(&state)?;
+    assert_eq!(commit.id.clone(), commit_data.id()?);
 
-//     let data = vec![1, 1, 1, 1, 1, 1, 1];
-//     state.commit_blob(&data, &author, "Commit N")?;
+    let data = vec![1, 1, 1, 1, 1, 1, 1];
+    state.commit_blob(&data, &author, "Commit N")?;
 
-//     assert_eq!(state.commits().len(), 2);
-//     Ok(())
-// }
+    assert_eq!(state.commits().len(), 2);
+    Ok(())
+}

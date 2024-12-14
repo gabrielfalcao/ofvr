@@ -6,13 +6,12 @@ use pqpfs::{PlainBytes, RSAPrivateKey, RSAPublicKey, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
+use crate::errors::{Error, Result};
+use crate::io::read_data;
+use crate::models::author::Author;
+use crate::models::commit::Commit;
 // use crate::models::commit_data::CommitData;
 use crate::traits::FileSystemBytes;
-use crate::{
-    errors::{Error, Result},
-    io::read_data,
-    models::{author::Author, commit::Commit},
-};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct OFVRState {
@@ -23,6 +22,9 @@ pub struct OFVRState {
 }
 
 impl OFVRState {
+    pub fn public_key(&self) -> RSAPublicKey {
+        self.private_key.public_key()
+    }
     pub fn get_author(&self, author: u16) -> Result<Author> {
         if self.authors.is_empty() {
             return Err(Error::StateError(format!("no authors in state")));
@@ -91,8 +93,10 @@ impl OFVRState {
         &self.commits
     }
 
-    pub fn add_commit(&mut self, commit: Commit) {
-        self.commits.push(commit)
+    pub fn add_commit(&mut self, commit: Commit) -> Result<Commit> {
+        self.commits.push(commit.clone());
+        self.store()?;
+        Ok(commit)
     }
 
     pub fn latest_commit(&self) -> Option<Commit> {
@@ -115,10 +119,13 @@ impl OFVRState {
             None => Diff::new(AxisBoundary::default()),
         };
         diff.update(data)?;
-        let commit = Commit::now(diff, self.get_author_id(author)?, message, &self.path, self)?;
-        self.add_commit(commit.clone());
-        self.store()?;
-        Ok(commit)
+        Ok(self.add_commit(Commit::now(
+            diff,
+            self.get_author_id(author)?,
+            message,
+            &self.path,
+            self,
+        )?)?)
     }
 }
 

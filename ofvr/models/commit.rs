@@ -4,10 +4,10 @@ use pqpfs::{Data, DecryptionKey, EncryptionKey, PlainBytes, RSAPrivateKey, RSAPu
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
-use crate::{
-    models::{author::Author, commit_data::CommitData, state::OFVRState},
-    Error, Result,
-};
+use crate::models::author::Author;
+use crate::models::commit_data::CommitData;
+use crate::models::state::OFVRState;
+use crate::{Error, Result};
 
 #[derive(Debug, Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Commit {
@@ -40,13 +40,18 @@ impl Commit {
 
     pub fn data(&self, ofvr: &OFVRState) -> Result<CommitData> {
         match ofvr.get_decryption_key_for_commit(&self.id)? {
-            Some(decryption_key) => match Commit::decrypt_commit_data(&decryption_key, &self.data) {
-                Ok(commit_data) => Ok(commit_data),
-                Err(error) => Err(Error::StateError(format!("failed to decrypt commit data from commit {}: {}", &self.id, error))),
-            }
+            Some(decryption_key) =>
+                match Commit::decrypt_commit_data(&decryption_key, &self.data) {
+                    Ok(commit_data) => Ok(commit_data),
+                    Err(error) => Err(Error::StateError(format!(
+                        "failed to decrypt commit data from commit {}: {}",
+                        &self.id, error
+                    ))),
+                },
             None => Err(Error::StateError(format!("no commit matching {}", &self.id))),
         }
     }
+
     pub fn encrypted_data(&self) -> &Data {
         &self.data
     }
@@ -62,18 +67,17 @@ impl Commit {
         Ok(encryption_key.encrypt(commit_data.to_plain_bytes().iter().map(|byte| *byte))?)
     }
 
-    pub fn decrypt_commit_data(
-        decryption_key: &RSAPrivateKey,
-        data: &Data,
-    ) -> Result<CommitData> {
+    pub fn decrypt_commit_data(decryption_key: &RSAPrivateKey, data: &Data) -> Result<CommitData> {
         let decrypted_data = decryption_key.decrypt(data.iter())?;
         Ok(CommitData::from_plain_bytes(&decrypted_data.to_bytes())?)
     }
 
     pub fn new(commit_data: CommitData, ofvr: &OFVRState) -> Result<Commit> {
-        let encryption_key = commit_data.decryption_key().public_key();
-        let data = encryption_key
-            .encrypt(commit_data.to_plain_bytes().iter().map(|byte| *byte))?;
+        let encryption_key = match ofvr.latest_commit() {
+            Some(commit) => commit.public_key(),
+            None => ofvr.public_key()
+        };
+        let data = encryption_key.encrypt(commit_data.to_plain_bytes().iter().map(|byte| *byte))?;
         let author = commit_data.author(ofvr)?.id();
         let id = commit_data.id()?;
         Ok(Commit {
