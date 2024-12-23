@@ -4,3 +4,5 @@
 *.ky
 /tests/cargo-run*
 *.state
+*.ofvr
+*.data

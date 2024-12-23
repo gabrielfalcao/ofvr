@@ -1,8 +1,7 @@
 use iocore::Path;
-use ofvr::{
-    errors::Error,
-    models::{author::Author, state::OFVRState},
-};
+use ofvr::errors::Error;
+use ofvr::models::author::Author;
+use ofvr::models::state::OFVRState;
 
 #[test]
 fn test_state() -> Result<(), Error> {
@@ -56,5 +55,20 @@ fn test_state_commit_blob() -> Result<(), Error> {
     state.commit_blob(&data, &author, "Commit N")?;
 
     assert_eq!(state.commits().len(), 2);
+    Ok(())
+}
+
+#[test]
+fn test_state_from_path() -> Result<(), Error> {
+    let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com")?;
+    let path = Path::new(file!())
+        .canonicalize()?
+        .with_filename("test_state_from_path")
+        .with_extension("ofvrf")
+        .hidden();
+    let state = OFVRState::empty(&path, &author)?;
+    state.store()?;
+
+    assert_eq!(state, OFVRState::from_path(&path)?);
     Ok(())
 }

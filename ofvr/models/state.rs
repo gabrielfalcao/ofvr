@@ -77,7 +77,7 @@ impl OFVRState {
     }
 
     pub fn store(&self) -> Result<()> {
-        self.path.write(&self.to_plain_bytes())?;
+        self.save_to_file(&self.path)?;
         Ok(())
     }
 
@@ -86,8 +86,7 @@ impl OFVRState {
     }
 
     pub fn from_path(path: &Path) -> Result<OFVRState> {
-        let data = read_data(path)?;
-        Ok(OFVRState::from_plain_bytes(&data)?)
+        Ok(OFVRState::load_from_file(path)?)
     }
 
     pub fn commits(&self) -> &[Commit] {
@@ -118,7 +117,9 @@ impl OFVRState {
         let author_id = if let Ok(author_id) = self.get_author_id(author) {
             author_id
         } else {
-            self.add_author(author)?
+            let author_id = self.add_author(author)?;
+            self.store()?;
+            author_id
         };
         let mut diff = match self.latest_commit() {
             Some(commit) => commit.data(&self)?.diff(),
@@ -152,8 +153,8 @@ impl OFVRState {
         }
         if let Err(error) = commit_data.clone() {
             return Err(Error::StateError(format!(
-                "checking commit {}/{} failed to decrypt commit id {}: {}",
-                pos, len, id, error
+                "[{}] checking commit {}/{} failed to decrypt commit id {}: {}",
+                &self.path, pos, len, id, error
             )));
         }
         let mut commit_data = commit_data.unwrap();
