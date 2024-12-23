@@ -13,6 +13,8 @@ run() {
 }
 cargo check -q
 
+run conf init -f "gabrielteratos@gmail.com" "Gabriel Falcão G DeMoura"
+run conf get
 cat >tests/cargo-run.txt <<EOF
 # ofvr commit 1 @ $(date)
 EOF

@@ -25,6 +25,7 @@ impl OFVRState {
     pub fn public_key(&self) -> RSAPublicKey {
         self.private_key.public_key()
     }
+
     pub fn get_author(&self, author: u16) -> Result<Author> {
         if self.authors.is_empty() {
             return Err(Error::StateError(format!("no authors in state")));
@@ -114,18 +115,17 @@ impl OFVRState {
     }
 
     pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<Commit> {
+        let author_id = if let Ok(author_id) = self.get_author_id(author) {
+            author_id
+        } else {
+            self.add_author(author)?
+        };
         let mut diff = match self.latest_commit() {
             Some(commit) => commit.data(&self)?.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
         diff.update(data)?;
-        Ok(self.add_commit(Commit::now(
-            diff,
-            self.get_author_id(author)?,
-            message,
-            &self.path,
-            self,
-        )?)?)
+        Ok(self.add_commit(Commit::now(diff, author_id, message, &self.path, self)?)?)
     }
 }
 
