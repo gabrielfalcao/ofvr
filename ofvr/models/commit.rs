@@ -75,7 +75,7 @@ impl Commit {
     pub fn new(commit_data: CommitData, ofvr: &OFVRState) -> Result<Commit> {
         let encryption_key = match ofvr.latest_commit() {
             Some(commit) => commit.public_key(),
-            None => ofvr.public_key()
+            None => ofvr.public_key()?
         };
         let data = encryption_key.encrypt(commit_data.to_plain_bytes().iter().map(|byte| *byte))?;
         let author = commit_data.author(ofvr)?.id();

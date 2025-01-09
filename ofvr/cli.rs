@@ -19,7 +19,6 @@ impl Cli {
             .clone()
             .or_else(|| Some(Conf::default_path()))
             .unwrap()
-            .try_canonicalize()
     }
 }
 
@@ -82,9 +81,8 @@ impl CommitOpt {
     pub fn ofvr_state_path(&self) -> Path {
         self.ofvr_state_path
             .clone()
-            .or(Some(self.from_file.with_extension(".ofvr")))
+            .or_else(||Some(self.from_file.with_extension(".ofvr")))
             .unwrap()
-            .try_canonicalize()
     }
 
     pub fn commit_author(&self, conf_path: &Path) -> Result<Author> {
@@ -112,9 +110,8 @@ impl MatchesOpt {
     pub fn ofvr_state_path(&self) -> Path {
         self.ofvr_state_path
             .clone()
-            .or(Some(self.from_file.with_extension(".ofvr")))
+            .or_else(||Some(self.from_file.with_extension(".ofvr")))
             .unwrap()
-            .try_canonicalize()
     }
 }
 #[derive(Args, Debug)]
@@ -124,7 +121,7 @@ pub struct LogOpt {
 }
 impl LogOpt {
     pub fn ofvr_state_path(&self) -> Path {
-        self.ofvr_state_path.try_canonicalize()
+        self.ofvr_state_path.clone()
     }
 }
 #[derive(Args, Debug)]
@@ -141,7 +138,6 @@ impl DiffOpt {
             .clone()
             .or(Some(self.from_file.with_extension(".ofvr")))
             .unwrap()
-            .try_canonicalize()
     }
 }
 
@@ -157,7 +153,7 @@ pub fn go(args: Cli) -> Result<()> {
                 let author = Author::new(&iop.author_name(), &iop.author_email())?;
                 let conf = Conf::new(author);
                 conf.save_to_file(&path)?;
-                println!("{}", path);
+                println!("initialized {}", path);
             },
             ConfCommand::Get(_) => {
                 if !path.canonicalize()?.is_file() {

@@ -17,13 +17,17 @@ use crate::traits::FileSystemBytes;
 pub struct OFVRState {
     commits: Vec<Commit>,
     path: Path,
-    private_key: RSAPrivateKey,
+    private_key: String,
     authors: BTreeMap<u16, Author>,
 }
 
 impl OFVRState {
-    pub fn public_key(&self) -> RSAPublicKey {
-        self.private_key.public_key()
+    pub fn private_key(&self) -> Result<RSAPrivateKey> {
+        let bytes = hex::decode(&self.private_key)?;
+        Ok(RSAPrivateKey::from_deflate_bytes(&bytes)?)
+    }
+    pub fn public_key(&self) -> Result<RSAPublicKey> {
+        Ok(self.private_key()?.public_key())
     }
 
     pub fn get_author(&self, author: u16) -> Result<Author> {
@@ -72,7 +76,7 @@ impl OFVRState {
             commits: commits.into(),
             authors,
             path,
-            private_key: RSAPrivateKey::generate()?,
+            private_key: hex::encode(RSAPrivateKey::generate()?.to_flate_bytes()?),
         })
     }
 
@@ -133,7 +137,7 @@ impl OFVRState {
 impl OFVRState {
     pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<Commit> {
         let data = read_data(&data_path)?;
-        self.commit_blob(&data, author, message)
+        Ok(self.commit_blob(&data, author, message)?)
     }
 
     pub fn get_decryption_key_for_commit(&self, id: &ID) -> Result<Option<RSAPrivateKey>> {
@@ -142,7 +146,7 @@ impl OFVRState {
         if len == 0 {
             return Err(Error::StateError(String::from("no commits present in the current state")));
         }
-        let mut decryption_key = self.private_key.clone();
+        let mut decryption_key = self.private_key()?;
         let mut commit = &self.commits[pos];
         let mut data = commit.encrypted_data();
         let commit_data = Commit::decrypt_commit_data(&decryption_key, data);
@@ -183,7 +187,7 @@ impl OFVRState {
     pub fn get_encryption_key_for_new_commit(&self, author: u16) -> Result<RSAPublicKey> {
         Ok(match self.latest_commit() {
             Some(commit) => commit.public_key(),
-            None => self.get_author(author)?.public_key(),
+            None => self.get_author(author)?.public_key()?,
         })
     }
 }
