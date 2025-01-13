@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-
+export RUST_BACKTRACE=1
 export RUST_MIN_STACK=268435456
 
 rm -f tests/cargo-run.ofvr
@@ -13,26 +13,26 @@ run() {
 }
 cargo check -q
 
-run conf init -f "gabrielteratos@gmail.com" "Gabriel Falcão G DeMoura"
-run conf get
+# run conf init -f "gabrielteratos@gmail.com" "Gabriel Falcão G DeMoura"
+# run conf get
 cat >tests/cargo-run.txt <<EOF
 # ofvr commit 1 @ $(date)
 EOF
 run commit -m 'test' tests/cargo-run.txt
+sleep 1
+cat >tests/cargo-run.txt <<EOF
+# ofvr commit 2 @ $(date)
+EOF
 
-# cat >tests/cargo-run.txt <<EOF
-# # ofvr commit 2 @ $(date)
-# EOF
+run commit -m 'test' tests/cargo-run.txt
 
-# run commit -m 'test' tests/cargo-run.txt
+run log tests/cargo-run.ofvr
 
-# run log tests/cargo-run.ofvr
+cat >tests/cargo-run.txt <<EOF
+# ofvr commit 3 @ $(date)
+EOF
 
-# cat >tests/cargo-run.txt <<EOF
-# # ofvr commit 3 @ $(date)
-# EOF
+run diff tests/cargo-run.txt
 
-# run diff tests/cargo-run.txt
-
-# g o -e "\033[1;38;5;154mcargo test\033[0m"
-# cargo test
+g o -e "\033[1;38;5;154mcargo test\033[0m"
+cargo test

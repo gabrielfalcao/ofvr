@@ -1,6 +1,8 @@
 use clap::{Args, Parser, Subcommand};
 use gdiff::{AxisBoundary, Diff};
 use iocore::Path;
+use tracing::info;
+use tracing::{span, Level};
 
 use crate::{Author, Conf, FileSystemBytes, OFVRState, Result};
 
@@ -15,10 +17,7 @@ pub struct Cli {
 }
 impl Cli {
     pub fn conf_path(&self) -> Path {
-        self.conf_path
-            .clone()
-            .or_else(|| Some(Conf::default_path()))
-            .unwrap()
+        self.conf_path.clone().or_else(|| Some(Conf::default_path())).unwrap()
     }
 }
 
@@ -81,7 +80,7 @@ impl CommitOpt {
     pub fn ofvr_state_path(&self) -> Path {
         self.ofvr_state_path
             .clone()
-            .or_else(||Some(self.from_file.with_extension(".ofvr")))
+            .or_else(|| Some(self.from_file.with_extension(".ofvr")))
             .unwrap()
     }
 
@@ -110,7 +109,7 @@ impl MatchesOpt {
     pub fn ofvr_state_path(&self) -> Path {
         self.ofvr_state_path
             .clone()
-            .or_else(||Some(self.from_file.with_extension(".ofvr")))
+            .or_else(|| Some(self.from_file.with_extension(".ofvr")))
             .unwrap()
     }
 }
@@ -146,6 +145,9 @@ pub fn go(args: Cli) -> Result<()> {
     match args.command {
         Command::Conf(op) => match op.command {
             ConfCommand::Init(iop) => {
+                let span = span!(Level::TRACE, "[cli] conf init");
+                let _enter_ = span.enter();
+
                 if !iop.overwrite && path.canonicalize()?.is_file() {
                     eprintln!("{} exists", path);
                     std::process::exit(1);
@@ -156,6 +158,7 @@ pub fn go(args: Cli) -> Result<()> {
                 println!("initialized {}", path);
             },
             ConfCommand::Get(_) => {
+                info!("[cli] conf get");
                 if !path.canonicalize()?.is_file() {
                     eprintln!("{} does not exist", path);
                     std::process::exit(1);
@@ -165,6 +168,7 @@ pub fn go(args: Cli) -> Result<()> {
             },
         },
         Command::Commit(op) => {
+            info!("[cli] commit");
             let author = op.commit_author(&path)?;
             let mut ofvr = if op.ofvr_state_path().is_file() {
                 OFVRState::from_path(&op.ofvr_state_path()).expect("state from path")
@@ -176,6 +180,7 @@ pub fn go(args: Cli) -> Result<()> {
             println!("{}", commit.log(&ofvr).expect("log"));
         },
         Command::Matches(op) => {
+            info!("[cli] matches");
             let ofvr = if op.ofvr_state_path().is_file() {
                 OFVRState::from_path(&op.ofvr_state_path())?
             } else {
@@ -196,6 +201,7 @@ pub fn go(args: Cli) -> Result<()> {
             }
         },
         Command::Log(op) => {
+            info!("[cli] log");
             let ofvr = if op.ofvr_state_path().is_file() {
                 OFVRState::from_path(&op.ofvr_state_path())?
             } else {
@@ -207,6 +213,7 @@ pub fn go(args: Cli) -> Result<()> {
             }
         },
         Command::Diff(op) => {
+            info!("[cli] diff");
             let ofvr = if op.ofvr_state_path().is_file() {
                 OFVRState::from_path(&op.ofvr_state_path())?
             } else {

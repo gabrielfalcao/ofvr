@@ -6,3 +6,14 @@
 *.state
 *.ofvr
 *.data
+tests/test*.1*
+tests/test*.2*
+tests/test*.3*
+tests/test*.4*
+tests/test*.5*
+tests/test*.6*
+tests/test*.7*
+tests/test*.8*
+tests/test*.9*
+*.auth
+*.bin
