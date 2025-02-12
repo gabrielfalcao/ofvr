@@ -3,12 +3,11 @@ use iocore::Path;
 use pqpfs::{Data, DecryptionKey, EncryptionKey, PlainBytes, RSAPrivateKey, RSAPublicKey, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
-use tracing::info;
 
 use crate::models::author::Author;
 use crate::models::commit_data::CommitData;
 use crate::models::state::OFVRState;
-use crate::{Error, Result};
+use crate::{trace_info, Error, Result};
 
 #[derive(Debug, Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Commit {
@@ -25,7 +24,7 @@ impl PartialEq for Commit {
 
 impl Commit {
     pub fn log(&self, ofvr: &OFVRState) -> Result<String> {
-        info!("Commit.log()");
+        //trace_info!("Commit::", "log()");
         let data = self.data(ofvr)?;
         Ok([
             format!("Commit: {}", self.id.to_hex("", false)),
@@ -37,34 +36,37 @@ impl Commit {
     }
 
     pub fn public_key(&self) -> RSAPublicKey {
-        info!("Commit.public_key()");
+        //trace_info!("Commit::", "public_key()");
         self.encryption_key.clone()
     }
 
     pub fn data(&self, ofvr: &OFVRState) -> Result<CommitData> {
-        info!("Commit.data()");
+        trace_info!("Commit::", "data() encrypted_data={}", self.encrypted_data().id3384());
         let decryption_key = self.get_decryption_key_from_state(ofvr)?;
         Ok(Commit::decrypt_commit_data(&decryption_key, &self.encrypted_data())?)
     }
 
     pub fn get_decryption_key_from_state(&self, ofvr: &OFVRState) -> Result<RSAPrivateKey> {
-        info!("Commit[{}].get_decryption_key_from_state()", self.id);
         match ofvr
             .get_decryption_key_for_commit(&self.id)
             .expect(&format!("get decryption key for commit {}", &self.id))
         {
-            Some(decryption_key) => Ok(decryption_key),
+            Some(decryption_key) => {
+                trace_info!("Commit::", "get_decryption_key_from_state() -> {}", &decryption_key.id3384());
+
+                Ok(decryption_key)
+            },
             None => Err(Error::StateError(format!("no commit matching {}", &self.id))),
         }
     }
 
     pub fn encrypted_data(&self) -> &Data {
-        info!("Commit[{}].encrypted_data() -> {}", self.id, self.data.id3384());
+        trace_info!("Commit::", "encrypted_data() -> \x1b[1;38;5;214m{}\x1b[0m", self.data.id3384());
         &self.data
     }
 
     pub fn author(&self, ofvr: &OFVRState) -> Result<Author> {
-        info!("Commit.author()");
+        //trace_info!("Commit::", "author()");
         Ok(ofvr.get_author(self.data(ofvr)?.author_id())?)
     }
 
@@ -72,31 +74,35 @@ impl Commit {
         encryption_key: &RSAPublicKey,
         commit_data: &CommitData,
     ) -> Result<Data> {
-        info!("Commit.encrypt_commit_data()");
+        trace_info!("Commit::", "\x1b[1;38;5;202mencrypt_commit_data(encryption_key: {}, commit_data: {})\x1b[0m", &encryption_key.id3384(), &commit_data.id3384());
         Ok(encryption_key.encrypt(commit_data.to_plain_bytes().iter().map(|byte| *byte))?)
     }
 
     pub fn decrypt_commit_data(decryption_key: &RSAPrivateKey, data: &Data) -> Result<CommitData> {
-        info!("Commit::decrypt_commit_data(decryption_key: {})", decryption_key.id3384());
+        trace_info!(
+            "Commit::", "decrypt_commit_data(\x1b[1;38;5;33mdecryption_key: {}, data: {})\x1b[0m",
+            decryption_key.id3384(),
+            &data.id3384()
+        );
         let decrypted_data = decryption_key.decrypt(data.iter())?;
         Ok(CommitData::from_plain_bytes(&decrypted_data.to_bytes())?)
     }
 
-    pub fn new(commit_data: CommitData, ofvr: &OFVRState) -> Result<Commit> {
-        info!("Commit.new()");
-        let encryption_key = match ofvr.latest_commit() {
-            Some(commit) => commit.public_key(),
-            None => ofvr.public_key()?,
-        };
+    pub fn new(
+        commit_data: CommitData,
+        ofvr: &OFVRState,
+        encryption_key: &RSAPublicKey,
+    ) -> Result<Commit> {
         let data = Commit::encrypt_commit_data(&encryption_key, &commit_data)?;
         let author = commit_data.author(ofvr)?.id();
         let id = commit_data.id()?;
+        //trace_info!("Commit::", "new(id={})", id.id3384());
 
         Ok(Commit {
             id,
             data,
             author,
-            encryption_key,
+            encryption_key: encryption_key.clone(),
         })
     }
 
@@ -106,11 +112,12 @@ impl Commit {
         message: &str,
         path: &Path,
         ofvr: &OFVRState,
+        encryption_key: &RSAPublicKey,
     ) -> Result<Commit> {
-        info!("Commit.now()");
         let date = t16::Data::now();
-        let commit_data = CommitData::new(&date, diff, author, message, path)?;
-        Commit::new(commit_data, ofvr)
+        let (commit_data, private_key) = CommitData::new(&date, diff, author, message, path)?;
+        trace_info!("Commit::", "\x1b[1;38;5;208mnow(commit_data={})\x1b[0m \x1b[1;38;5;202mencryption_key={}\x1b[0m", commit_data.id3384(), private_key.id3384());
+        Commit::new(commit_data, ofvr, encryption_key)
     }
 }
 

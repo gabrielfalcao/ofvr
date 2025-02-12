@@ -10,9 +10,9 @@ use crate::errors::{Error, Result};
 use crate::io::read_data;
 use crate::models::author::Author;
 use crate::models::commit::Commit;
+use crate::trace_info;
 // use crate::models::commit_data::CommitData;
 use crate::traits::FileSystemBytes;
-use tracing::info;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct OFVRState {
@@ -70,16 +70,23 @@ impl OFVRState {
     }
 
     pub fn empty(path: &Path, author: &Author) -> Result<OFVRState> {
-        info!("OFVRState::empty");
+        //trace_info!("OFVRState::", "empty");
+
         let mut authors = BTreeMap::<u16, Author>::new();
         let commits = Vec::new();
         authors.insert(author.id(), author.clone());
         let path = path.clone();
+        let private_key = RSAPrivateKey::generate()?;
+        trace_info!(
+            "State::", "empty() -> \x1b[1;38;5;33mdecryption_key: {}\x1b[0m",
+            private_key.id3384()
+        );
+
         Ok(OFVRState {
             commits: commits.into(),
             authors,
             path,
-            private_key: hex::encode(RSAPrivateKey::generate()?.to_flate_bytes()?),
+            private_key: hex::encode(private_key.to_flate_bytes()?),
         })
     }
 
@@ -93,32 +100,37 @@ impl OFVRState {
     }
 
     pub fn from_path(path: &Path) -> Result<OFVRState> {
-        info!("OFVRState::from_path()");
+        //trace_info!("OFVRState::", "from_path()");
         Ok(OFVRState::load_from_file(path)?)
     }
 
     pub fn commits(&self) -> &[Commit] {
-        info!("OFVRState.commits()");
+        //trace_info!("OFVRState::", "commits()");
         &self.commits
     }
 
     pub fn add_commit(&mut self, commit: Commit) -> Result<Commit> {
-        info!("OFVRState.add_commit");
+        //trace_info!("OFVRState::", "add_commit({})", &commit.id3384());
         self.commits.push(commit.clone());
         self.store()?;
         Ok(commit)
     }
 
     pub fn latest_commit(&self) -> Option<Commit> {
-        info!("OFVRState.latest_commit");
         match self.commits.last() {
-            Some(commit) => Some(commit.clone()),
-            None => None,
+            Some(commit) => {
+                trace_info!("OFVRState::", "latest_commit() -> {}", &commit.id3384());
+                Some(commit.clone())
+            },
+            None => {
+                trace_info!("OFVRState::", "latest_commit() -> None");
+                None
+            },
         }
     }
 
     pub fn first_commit(&self) -> Option<Commit> {
-        info!("OFVRState.first_commit");
+        trace_info!("OFVRState::", "first_commit");
         match self.commits.first() {
             Some(commit) => Some(commit.clone()),
             None => None,
@@ -126,7 +138,7 @@ impl OFVRState {
     }
 
     pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<Commit> {
-        info!("OFVRState.commit_blob");
+        // trace_info!("OFVRState::", "commit_blob");
         let author_id = if let Ok(author_id) = self.get_author_id(author) {
             author_id
         } else {
@@ -138,22 +150,31 @@ impl OFVRState {
             Some(commit) => commit.data(&self)?.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
+        let encryption_key = self.get_encryption_key_for_new_commit(author_id)?;
         diff.update(data)?;
-        Ok(self.add_commit(Commit::now(diff, author_id, message, &self.path, self)?)?)
+        Ok(self.add_commit(Commit::now(
+            diff,
+            author_id,
+            message,
+            &self.path,
+            self,
+            &encryption_key,
+        )?)?)
     }
 }
 
 impl OFVRState {
     pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<Commit> {
-        info!("OFVRState.commit");
+        // trace_info!("OFVRState::", "commit");
         let data = read_data(&data_path)?;
         Ok(self.commit_blob(&data, author, message)?)
     }
 
     pub fn get_decryption_key_for_commit_no(&self, pos: usize) -> Result<RSAPrivateKey> {
-        info!("OFVRState.get_decryption_key_for_commit_no {}", pos);
         if pos == 0 {
-            return Ok(self.private_key()?);
+            let private_key = self.private_key()?;
+            trace_info!("OFVRState::", "get_decryption_key_for_commit_no {} \x1b[1;38;5;118mdecryption_key={}\x1b[0m", pos, private_key.id3384());
+            return Ok(private_key);
         }
 
         let commits = self.commits();
@@ -175,7 +196,7 @@ impl OFVRState {
     }
 
     pub fn get_decryption_key_for_commit(&self, id: &ID) -> Result<Option<RSAPrivateKey>> {
-        info!("OFVRState.get_decryption_key_for_commit {}", id);
+        // trace_info!("OFVRState::", "get_decryption_key_for_commit {}", id);
         let len = self.commits.len();
         if len == 0 {
             return Err(Error::StateError(String::from("no commits present in the current state")));
@@ -193,7 +214,7 @@ impl OFVRState {
     }
 
     pub fn get_encryption_key_for_new_commit(&self, author: u16) -> Result<RSAPublicKey> {
-        info!("OFVRState.get_encryption_key_for_new_commit");
+        // trace_info!("OFVRState::", "get_encryption_key_for_new_commit");
         Ok(match self.latest_commit() {
             Some(commit) => commit.public_key(),
             None => self.get_author(author)?.public_key()?,
