@@ -1,7 +1,7 @@
 #![allow(unused)]
 use iocore::Path;
 use ofvr::{Author, OFVRState};
-use pqpfs::{PlainBytes, EncryptionKey, DecryptionKey};
+use ofvr::traits::{PlainBytes};
 
 fn get_tests_path() -> Path {
     Path::new(file!())
@@ -22,7 +22,7 @@ fn read_test_file_path(name: &str) -> Vec<u8> {
 // #[test]
 // fn test_new_commit_blob() {
 //     let author =
-//         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
+//         Author::new("Testy McTesterson", "testymctesterson+qa@noon.noon").expect("author");
 //     let mut state =
 //         OFVRState::empty(&test_file_path("test.commit.ofvrf"), &author).expect("new state");
 //     let commit = state
@@ -38,7 +38,7 @@ fn read_test_file_path(name: &str) -> Vec<u8> {
 // #[test]
 // fn test_commit_from_file() {
 //     let author =
-//         Author::new("Testy McTesterson", "testymctesterson@qa.poems.codes").expect("author");
+//         Author::new("Testy McTesterson", "testymctesterson+qa@noon.noon").expect("author");
 //     let mut state =
 //         OFVRState::empty(&test_file_path("test.commits.ofvrf"), &author).expect("new state");
 //     state

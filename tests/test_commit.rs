@@ -2,7 +2,7 @@ use iocore_test::{path_to_test_file, seq_bytes};
 use ofvr::errors::Result;
 use ofvr::models::author::Author;
 use ofvr::state::OFVRState;
-use pqpfs::PlainBytes;
+use ofvr::traits::PlainBytes;
 
 fn load_author() -> Author {
     let path = path_to_test_file!("test_models_commit.auth");
@@ -19,7 +19,7 @@ fn load_author() -> Author {
 }
 
 fn author() -> Author {
-    Author::new("Gabriel Falcão", "gabrielfalcao@protonmail.com").expect(&format!("author"))
+    Author::new("Gabriel DeMoura", "gabrielteratos@gmail.com")
 }
 
 #[test]
