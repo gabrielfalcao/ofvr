@@ -3,12 +3,12 @@ use iocore_test::{path_to_test_file, seq_bytes};
 use ofvr::errors::{Error, Result};
 use ofvr::models::author::Author;
 use ofvr::models::state::OFVRState;
-use pqpfs::traits::PlainBytes;
+use ofvr::traits::PlainBytes;
 
 #[test]
 fn test_state() -> Result<()> {
-    let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
-    let path = Path::new(file!()).with_extension(".test_state.ofvrf");
+    let author = Author::new("Gabriel DeMoura", "gabrielteratos@gmail.com");
+    let path = path_to_test_file!("state.ofvr");
     let state = OFVRState::empty(&path, &author)?;
     state.store()?;
     let mut state = OFVRState::from_path(&path)?;
@@ -18,12 +18,12 @@ fn test_state() -> Result<()> {
     let author_id: u16 = state.get_author_id(&author)?;
     assert_eq!(state.get_author(author_id)?, author);
 
-    let author_qa = Author::new("Gabriel Falcão", "gabrielfalcao@qa.poems.codes")?;
+    let author_qa = Author::new("Gabriel DeMoura", "gabrielteratos+qa@gmail.com");
     let author_qa_id: u16 = state.add_author(&author_qa)?;
-    assert_eq!(author_qa_id, 0x0CFF);
+    assert_eq!(author_qa_id, 0x5fb5);
     assert_eq!(state.get_author(author_qa_id)?, author_qa);
 
-    let author_staging = Author::new("Gabriel Falcão", "gabrielfalcao@staging.poems.codes")?;
+    let author_staging = Author::new("Gabriel DeMoura", "gabrielteratos+staging@gmail.com");
     let author_staging_id: u16 = state.add_author(&author_staging)?;
     assert_eq!(state.get_author(author_staging_id)?, author_staging);
 
@@ -43,7 +43,7 @@ fn test_state() -> Result<()> {
 #[test]
 fn test_state_commit_blob() -> Result<()> {
     let author = load_author();
-    let path = Path::new(file!()).with_extension(".test_state_commit_blob.ofvrf");
+    let path = path_to_test_file!("state.ofvr");
     let mut state = OFVRState::empty(&path, &author)?;
 
     assert!(state.commits().is_empty());
@@ -92,15 +92,15 @@ fn load_author() -> Author {
 }
 
 fn author() -> Author {
-    Author::new("Gabriel Falcão", "gabrielfalcao@protonmail.com").expect(&format!("author"))
+    Author::new("Gabriel DeMoura", "gabrielteratos@gmail.com")
 }
 
 #[test]
 fn test_state_commit() -> Result<()> {
-    let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
-    let path = path_to_test_file!("test_state_commit.ofvrf").delete()?;
+    let author = Author::new("Gabriel DeMoura", "gabrielteratos@gmail.com");
+    let path = path_to_test_file!("state.ofvr").delete()?;
     let mut state = OFVRState::empty(&path, &author)?;
-    let from_file = path_to_test_file!("test_state_commit.data");
+    let from_file = path_to_test_file!("state.data");
     from_file.write(&seq_bytes(u16::MAX.into()))?;
 
     state.commit(&from_file, &author, "Commit N")?;

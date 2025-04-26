@@ -1,4 +1,4 @@
-use gdiff::{AxisBoundary, Diff};
+use bt_diff::{AxisBoundary, Diff};
 use iocore::Path;
 use ofvr::errors::Error;
 use ofvr::models::author::Author;
@@ -19,7 +19,7 @@ fn test_commit_data() -> Result<(), Error> {
     let diff = Diff::new(AxisBoundary::default());
     let path = Path::new(file!());
 
-    let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com")?;
+    let author = Author::new("Gabriel Falcão", "gabrielteratos@gmail.com");
     let state_path = Path::new(file!()).with_extension(".state");
     let state = OFVRState::empty(&state_path, &author)?;
 

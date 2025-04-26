@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-
 set -e
+
 export RUST_BACKTRACE=1
-export RUST_MIN_STACK=268435456
+
 
 rm -f tests/cargo-run.ofvr
 
 run() {
-    g o -e "\033[1;38;5;220mofvr ${*}\033[0m"
+    echo -e "\033[1;38;5;220mofvr ${*}\033[0m"
     cargo build
     target/debug/ofvr $* #rust-lldb target/debug/ofvr -- $*
 }
 cargo check -q
 
-# run conf init -f "gabrielteratos@gmail.com" "Gabriel Falcão G DeMoura"
-# run conf get
+run conf init -f "gabrielteratos@gmail.com" "Gabriel Falcão G DeMoura"
+run conf get
 cat >tests/cargo-run.txt <<EOF
 # ofvr commit 1 @ $(date)
 EOF
@@ -33,6 +33,3 @@ cat >tests/cargo-run.txt <<EOF
 EOF
 
 run diff tests/cargo-run.txt
-
-g o -e "\033[1;38;5;154mcargo test\033[0m"
-cargo test

@@ -1,12 +1,13 @@
-use gdiff::Diff;
+use bt_diff::Diff;
 use iocore::Path;
-use pqpfs::{PlainBytes, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
+use crate::traits::PlainBytes;
 
 use crate::models::author::Author;
 use crate::models::state::OFVRState;
-use crate::{trace_info, FileSystemBytes, Result};
+use crate::models::id::ID;
+use crate::Result;
 
 #[derive(Debug, Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct CommitData {
@@ -71,7 +72,7 @@ impl CommitData {
     }
 
     pub fn id(&self) -> Result<ID> {
-        let id = ID::new(crate::hash::keccak256(&self.to_flate_bytes()?));
+        let id = ID::new(crate::hash::keccak256(&self.to_flate_bytes().unwrap()));
         Ok(id)
     }
 
@@ -80,8 +81,3 @@ impl CommitData {
     }
 }
 impl PlainBytes for CommitData {}
-impl FileSystemBytes for CommitData {
-    fn default_path() -> Path {
-        Path::cwd().join("...")
-    }
-}

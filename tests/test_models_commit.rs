@@ -1,15 +1,14 @@
-use gdiff::{AxisBoundary, Diff};
+use bt_diff::{AxisBoundary, Diff};
 use iocore::Path;
 use iocore_test::{path_to_test_file, seq_bytes};
-use ofvr::errors::{Error, Result};
+use ofvr::errors::Result;
 use ofvr::models::author::Author;
 use ofvr::models::commit::Commit;
 use ofvr::models::commit_data::CommitData;
 use ofvr::state::OFVRState;
-use pqpfs::{PlainBytes};
 
 fn author() -> Author {
-    Author::new("Gabriel Falcão", "gabrielfalcao@protonmail.com").expect(&format!("author"))
+    Author::new("Gabriel DeMoura", "gabrielteratos@gmail.com.com")
 }
 
 #[test]

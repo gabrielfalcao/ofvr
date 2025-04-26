@@ -1,8 +1,7 @@
 use std::collections::BTreeMap;
 
-use gdiff::{AxisBoundary, Diff};
+use bt_diff::{AxisBoundary, Diff};
 use iocore::Path;
-use pqpfs::{PlainBytes, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
@@ -10,9 +9,8 @@ use crate::errors::{Error, Result};
 use crate::io::read_data;
 use crate::models::author::Author;
 use crate::models::commit::Commit;
-use crate::trace_info;
 // use crate::models::commit_data::CommitData;
-use crate::traits::FileSystemBytes;
+use crate::traits::{FileSystemBytes, PlainBytes};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct OFVRState {
@@ -82,17 +80,14 @@ impl OFVRState {
     }
 
     pub fn from_path(path: &Path) -> Result<OFVRState> {
-        //trace_info!("OFVRState::", "from_path()");
         Ok(OFVRState::load_from_file(path)?)
     }
 
     pub fn commits(&self) -> &[Commit] {
-        //trace_info!("OFVRState::", "commits()");
         &self.commits
     }
 
     pub fn add_commit(&mut self, commit: Commit) -> Result<Commit> {
-        //trace_info!("OFVRState::", "add_commit({})", &commit.id3384());
         self.commits.push(commit.clone());
         self.store()?;
         Ok(commit)
@@ -101,18 +96,15 @@ impl OFVRState {
     pub fn latest_commit(&self) -> Option<Commit> {
         match self.commits.last() {
             Some(commit) => {
-                trace_info!("OFVRState::", "latest_commit() -> {}", &commit.id3384());
                 Some(commit.clone())
             },
             None => {
-                trace_info!("OFVRState::", "latest_commit() -> None");
                 None
             },
         }
     }
 
     pub fn first_commit(&self) -> Option<Commit> {
-        trace_info!("OFVRState::", "first_commit");
         match self.commits.first() {
             Some(commit) => Some(commit.clone()),
             None => None,
@@ -120,7 +112,6 @@ impl OFVRState {
     }
 
     pub fn commit_blob(&mut self, data: &[u8], author: &Author, message: &str) -> Result<Commit> {
-        // trace_info!("OFVRState::", "commit_blob");
         let author_id = if let Ok(author_id) = self.get_author_id(author) {
             author_id
         } else {
@@ -145,22 +136,10 @@ impl OFVRState {
 
 impl OFVRState {
     pub fn commit(&mut self, data_path: &Path, author: &Author, message: &str) -> Result<Commit> {
-        // trace_info!("OFVRState::", "commit");
         let data = read_data(&data_path)?;
         Ok(self.commit_blob(&data, author, message)?)
     }
 }
-impl PlainBytes for OFVRState {
-    fn to_bytes(&self) -> Vec<u8> {
-        self.to_plain_bytes()
-    }
 
-    fn from_bytes(bytes: &[u8]) -> Self {
-        Self::from_plain_bytes(bytes).expect("OFVRState::from_plain_bytes")
-    }
-}
-impl FileSystemBytes for OFVRState {
-    fn default_path() -> Path {
-        Path::cwd().join(".ofvr").try_canonicalize()
-    }
-}
+impl PlainBytes for OFVRState{}
+impl FileSystemBytes for OFVRState {}

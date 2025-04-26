@@ -1,10 +1,12 @@
 pub mod author;
-pub use author::*;
+pub use author::Author;
 pub mod conf;
-pub use conf::*;
+pub use conf::Conf;
 pub mod state;
-pub use state::*;
+pub use state::OFVRState;
 pub mod commit;
-pub use commit::*;
+pub use commit::Commit;
 pub mod commit_data;
-pub use commit_data::*;
+pub use commit_data::CommitData;
+pub mod id;
+pub use id::ID;

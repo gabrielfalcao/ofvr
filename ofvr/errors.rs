@@ -11,7 +11,6 @@ pub enum Error {
     DecodeError(String),
     EncodeError(String),
     IOError(String),
-    PQPFSError(String),
     BincodeError(String),
     TomlError(String),
     StateError(String),
@@ -41,7 +40,6 @@ impl Display for Error {
                 Self::DecodeError(e) => e.to_string(),
                 Self::EncodeError(e) => e.to_string(),
                 Self::IOError(e) => e.to_string(),
-                Self::PQPFSError(e) => e.to_string(),
                 Self::BincodeError(e) => e.to_string(),
                 Self::TomlError(e) => e.to_string(),
                 Self::StateError(e) => e.to_string(),
@@ -61,14 +59,8 @@ impl Error {
             Error::BincodeError(_) => "BincodeError",
             Error::TomlError(_) => "TomlError",
             Error::StateError(_) => "StateError",
-            Error::PQPFSError(_) => "PQPFSError",
         }
         .to_string()
-    }
-}
-impl From<pqpfs::Error> for Error {
-    fn from(e: pqpfs::Error) -> Self {
-        Error::PQPFSError(format!("{}", e))
     }
 }
 impl From<hex::FromHexError> for Error {
@@ -76,8 +68,8 @@ impl From<hex::FromHexError> for Error {
         Error::HexDecodeError(format!("{}", e))
     }
 }
-impl From<gdiff::Error> for Error {
-    fn from(e: gdiff::Error) -> Self {
+impl From<bt_diff::Error> for Error {
+    fn from(e: bt_diff::Error) -> Self {
         Error::DiffError(format!("{}", e))
     }
 }
