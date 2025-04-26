@@ -6,12 +6,12 @@ autobins = false
 autobenches = false
 
 [dependencies]
-pqpfs = {path = "../pqpfs"}
+pqpfs = {path = "./pqpfs"}
 chrono = { version = "0.4.38", features = ["serde", "libc"] }
 bincode = "1.3.3"
 serde = { version = "1.0.215", features = ["derive"] }
-t16 = { path = "../t16" }
-gdiff = { path = "../gdiff" }
+t16 = "0.0.1"
+gdiff = { path = "./gdiff" }
 security-framework = { version = "3.0.0", features = ["OSX_10_13", "log"] }
 clap = { version = "4.5.21", features = ["derive", "env"] }
 iocore = { version = "2.3.2"  }

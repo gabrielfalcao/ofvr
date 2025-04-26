@@ -1876,7 +1876,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "sha3",
- "t16 0.0.1",
+ "t16",
  "toml",
  "tracing",
  "tracing-subscriber",
@@ -2221,7 +2221,7 @@ dependencies = [
  "sequoia-openpgp",
  "serde",
  "sha3",
- "t16 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "t16",
 ]
 
 [[package]]
@@ -2861,17 +2861,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.89",
-]
-
-[[package]]
-name = "t16"
-version = "0.0.1"
-dependencies = [
- "chrono",
- "clap",
- "hex",
- "regex",
- "serde",
 ]
 
 [[package]]
