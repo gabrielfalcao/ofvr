@@ -35,16 +35,16 @@ impl Display for Error {
             "{}{}",
             self.variant(),
             match self {
-                Self::CommitError(s) => format!("{}", s),
-                Self::DiffError(s) => format!("{}", s),
-                Self::HexDecodeError(s) => format!("{}", s),
-                Self::DecodeError(s) => format!("{}", s),
-                Self::EncodeError(s) => format!("{}", s),
-                Self::IOError(s) => format!("{}", s),
-                Self::PQPFSError(s) => format!("{}", s),
-                Self::BincodeError(s) => format!("{}", s),
-                Self::TomlError(s) => format!("{}", s),
-                Self::StateError(s) => format!("{}", s),
+                Self::CommitError(e) => e.to_string(),
+                Self::DiffError(e) => e.to_string(),
+                Self::HexDecodeError(e) => e.to_string(),
+                Self::DecodeError(e) => e.to_string(),
+                Self::EncodeError(e) => e.to_string(),
+                Self::IOError(e) => e.to_string(),
+                Self::PQPFSError(e) => e.to_string(),
+                Self::BincodeError(e) => e.to_string(),
+                Self::TomlError(e) => e.to_string(),
+                Self::StateError(e) => e.to_string(),
             }
         )
     }
@@ -81,8 +81,8 @@ impl From<gdiff::Error> for Error {
         Error::DiffError(format!("{}", e))
     }
 }
-impl From<iocore::Exception> for Error {
-    fn from(e: iocore::Exception) -> Self {
+impl From<iocore::Error> for Error {
+    fn from(e: iocore::Error) -> Self {
         Error::IOError(format!("{}", e))
     }
 }

@@ -1,6 +1,6 @@
 use gdiff::Diff;
 use iocore::Path;
-use pqpfs::{PlainBytes, RSAPrivateKey, ID};
+use pqpfs::{PlainBytes, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
@@ -15,11 +15,10 @@ pub struct CommitData {
     message: String,
     path: Path,
     author: u16,
-    pub decryption_key: RSAPrivateKey,
 }
 impl PartialEq for CommitData {
     fn eq(&self, other: &Self) -> bool {
-        self.decryption_key == other.decryption_key
+        self.diff == other.diff
     }
 }
 impl CommitData {
@@ -51,43 +50,28 @@ impl CommitData {
         self.path.clone()
     }
 
-    pub fn decryption_key(&self) -> RSAPrivateKey {
-        self.decryption_key.clone()
-    }
-
     pub fn new(
         date: &t16::Data,
         diff: Diff,
         author: u16,
         message: &str,
         path: &Path,
-    ) -> Result<(CommitData, RSAPrivateKey)> {
+    ) -> Result<CommitData> {
         let date = date.clone();
         let message = message.to_string();
         let path = path.clone();
-        let decryption_key = RSAPrivateKey::generate()?;
         let commit_data = CommitData {
             date,
             diff,
             message,
             path,
             author,
-            decryption_key: decryption_key.clone(),
         };
-        trace_info!(
-            "CommitData::",
-            "\x1b[1;38;5;122mnew(author={}, decryption_key={}) commit_data={})\x1b[0m ",
-            author,
-            decryption_key.id3384(),
-            commit_data.id3384()
-        );
-
-        Ok((commit_data, decryption_key))
+        Ok(commit_data)
     }
 
     pub fn id(&self) -> Result<ID> {
         let id = ID::new(crate::hash::keccak256(&self.to_flate_bytes()?));
-        trace_info!("CommitData::", "id() => {}", id.id3384());
         Ok(id)
     }
 
@@ -95,15 +79,7 @@ impl CommitData {
         self.date().to_chrono().to_rfc3339()
     }
 }
-impl PlainBytes for CommitData {
-    fn to_bytes(&self) -> Vec<u8> {
-        self.to_plain_bytes()
-    }
-
-    fn from_bytes(bytes: &[u8]) -> Self {
-        Self::from_plain_bytes(bytes).expect("CommitData::from_plain_bytes")
-    }
-}
+impl PlainBytes for CommitData {}
 impl FileSystemBytes for CommitData {
     fn default_path() -> Path {
         Path::cwd().join("...")

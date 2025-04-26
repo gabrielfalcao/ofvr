@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use gdiff::{AxisBoundary, Diff};
 use iocore::Path;
-use pqpfs::{PlainBytes, RSAPrivateKey, RSAPublicKey, ID};
+use pqpfs::{PlainBytes, ID};
 use serde::{Deserialize, Serialize};
 pub use sha3::{Digest, Keccak256, Keccak256Full};
 
@@ -18,20 +18,10 @@ use crate::traits::FileSystemBytes;
 pub struct OFVRState {
     commits: Vec<Commit>,
     path: Path,
-    private_key: String,
     authors: BTreeMap<u16, Author>,
 }
 
 impl OFVRState {
-    pub fn private_key(&self) -> Result<RSAPrivateKey> {
-        let bytes = hex::decode(&self.private_key)?;
-        Ok(RSAPrivateKey::from_deflate_bytes(&bytes)?)
-    }
-
-    pub fn public_key(&self) -> Result<RSAPublicKey> {
-        Ok(self.private_key()?.public_key())
-    }
-
     pub fn get_author(&self, author: u16) -> Result<Author> {
         if self.authors.is_empty() {
             return Err(Error::StateError(format!("no authors in state")));
@@ -70,23 +60,15 @@ impl OFVRState {
     }
 
     pub fn empty(path: &Path, author: &Author) -> Result<OFVRState> {
-        //trace_info!("OFVRState::", "empty");
-
         let mut authors = BTreeMap::<u16, Author>::new();
         let commits = Vec::new();
         authors.insert(author.id(), author.clone());
         let path = path.clone();
-        let private_key = RSAPrivateKey::generate()?;
-        trace_info!(
-            "State::", "empty() -> \x1b[1;38;5;33mdecryption_key: {}\x1b[0m",
-            private_key.id3384()
-        );
 
         Ok(OFVRState {
             commits: commits.into(),
             authors,
             path,
-            private_key: hex::encode(private_key.to_flate_bytes()?),
         })
     }
 
@@ -150,7 +132,6 @@ impl OFVRState {
             Some(commit) => commit.data(&self)?.diff(),
             None => Diff::new(AxisBoundary::default()),
         };
-        let encryption_key = self.get_encryption_key_for_new_commit(author_id)?;
         diff.update(data)?;
         Ok(self.add_commit(Commit::now(
             diff,
@@ -158,7 +139,6 @@ impl OFVRState {
             message,
             &self.path,
             self,
-            &encryption_key,
         )?)?)
     }
 }
@@ -168,57 +148,6 @@ impl OFVRState {
         // trace_info!("OFVRState::", "commit");
         let data = read_data(&data_path)?;
         Ok(self.commit_blob(&data, author, message)?)
-    }
-
-    pub fn get_decryption_key_for_commit_no(&self, pos: usize) -> Result<RSAPrivateKey> {
-        if pos == 0 {
-            let private_key = self.private_key()?;
-            trace_info!("OFVRState::", "get_decryption_key_for_commit_no {} \x1b[1;38;5;118mdecryption_key={}\x1b[0m", pos, private_key.id3384());
-            return Ok(private_key);
-        }
-
-        let commits = self.commits();
-        let len = commits.len();
-        let commit = &commits[pos];
-        let data = Commit::decrypt_commit_data(
-            &self.get_decryption_key_for_commit_no(pos - 1)?,
-            &commit.encrypted_data(),
-        )
-        .map_err(|error| {
-            Error::StateError(format!(
-                "failed to get decryption key for commit {}/{}: {}",
-                pos + 1,
-                len,
-                error
-            ))
-        })?;
-        Ok(data.decryption_key.clone())
-    }
-
-    pub fn get_decryption_key_for_commit(&self, id: &ID) -> Result<Option<RSAPrivateKey>> {
-        // trace_info!("OFVRState::", "get_decryption_key_for_commit {}", id);
-        let len = self.commits.len();
-        if len == 0 {
-            return Err(Error::StateError(String::from("no commits present in the current state")));
-        }
-        match self
-            .commits()
-            .iter()
-            .enumerate()
-            .find(|(_, &ref commit)| commit.id == *id)
-            .map(|(pos, _)| self.get_decryption_key_for_commit_no(pos))
-        {
-            Some(data) => Ok(Some(data?)),
-            None => return Err(Error::StateError(format!("no commit matching id {}", id))),
-        }
-    }
-
-    pub fn get_encryption_key_for_new_commit(&self, author: u16) -> Result<RSAPublicKey> {
-        // trace_info!("OFVRState::", "get_encryption_key_for_new_commit");
-        Ok(match self.latest_commit() {
-            Some(commit) => commit.public_key(),
-            None => self.get_author(author)?.public_key()?,
-        })
     }
 }
 impl PlainBytes for OFVRState {

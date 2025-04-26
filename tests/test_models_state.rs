@@ -78,7 +78,7 @@ fn test_state_from_path() -> Result<()> {
 }
 
 fn load_author() -> Author {
-    let path = path_to_test_file!("test_models_commit", "auth");
+    let path = path_to_test_file!("test_models_commit.auth");
     || -> Result<Author> {
         Ok(if path.is_file() {
             Author::from_deflate_bytes(&path.read_bytes()?)?
@@ -98,9 +98,9 @@ fn author() -> Author {
 #[test]
 fn test_state_commit() -> Result<()> {
     let author = Author::new("Gabriel Falcão", "gabrielfalcao@poems.codes")?;
-    let path = path_to_test_file!("test_state_commit", "ofvrf").delete()?;
+    let path = path_to_test_file!("test_state_commit.ofvrf").delete()?;
     let mut state = OFVRState::empty(&path, &author)?;
-    let from_file = path_to_test_file!("test_state_commit", "data");
+    let from_file = path_to_test_file!("test_state_commit.data");
     from_file.write(&seq_bytes(u16::MAX.into()))?;
 
     state.commit(&from_file, &author, "Commit N")?;
