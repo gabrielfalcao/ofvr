@@ -9,3 +9,5 @@ __test_files__
 *.data
 *.auth
 *.bin
+
+.logs/

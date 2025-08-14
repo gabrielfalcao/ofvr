@@ -21,7 +21,7 @@ serde = { version = "1.0.215", features = ["derive"] }
 t16 = "0.0.1"
 bt-diff = "0.0.1"
 clap = { version = "4.5.21", features = ["derive", "env"] }
-iocore = { version = "2.3.2"  }
+iocore = { version = "3.0.1" }
 hex = "0.4.3"
 flate2 = "1.0.35"
 serde_bytes = "0.11.15"
@@ -36,11 +36,11 @@ sanitation = "1.0.3"
 
 [[bin]]
 name = "ofvr"
-path = "ofvr.rs"
+path = "src/main.rs"
 
 [lib]
 name = "ofvr"
-path = "ofvr/lib.rs"
+path = "src/lib.rs"
 crate-type = ["lib"]
 required-features = []
 

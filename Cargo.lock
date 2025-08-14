@@ -122,7 +122,7 @@ dependencies = [
  "digest",
  "flate2",
  "hex",
- "iocore",
+ "iocore 2.3.2",
  "og-enum-to-string",
  "serde",
 ]
@@ -254,6 +254,16 @@ checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer",
  "crypto-common",
+]
+
+[[package]]
+name = "dumbeq"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd068ff363352f6d14078bb1c2098cc63595173ed4939b40dc04b4b4f410770d"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -410,12 +420,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "iocore"
+version = "3.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb7bc22f65871c0c034c0605c3ea9356a734e151ccb132223f834ba8beaa2de1"
+dependencies = [
+ "chrono",
+ "dumbeq",
+ "filetime",
+ "glob",
+ "lazy_static",
+ "regex",
+ "sanitation",
+ "serde",
+ "shlex",
+ "thread-groups",
+ "trilobyte",
+]
+
+[[package]]
 name = "iocore-test"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b3092d7383fc5631d8278906ecd3b6eaf4343f7eaee867ff021fe0706bf1e3"
 dependencies = [
- "iocore",
+ "iocore 2.3.2",
 ]
 
 [[package]]
@@ -523,7 +552,7 @@ dependencies = [
  "clap",
  "flate2",
  "hex",
- "iocore",
+ "iocore 3.0.3",
  "iocore-test",
  "md5",
  "rand",
@@ -573,9 +602,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.37"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
+checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]
@@ -765,9 +794,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "syn"
-version = "2.0.89"
+version = "2.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44d46482f1c1c87acd84dea20c1bf5ebff4c757009ed6bf19cfd36fb10e92c4e"
+checksum = "8ce2b7fc941b3a24138a0a7cf8e858bfc6a992e7978a068a5c760deb0ed43caf"
 dependencies = [
  "proc-macro2",
  "quote",
