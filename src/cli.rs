@@ -2,7 +2,7 @@ use clap::{Args, Parser, Subcommand};
 use bt_diff::{AxisBoundary, Diff};
 use iocore::Path;
 
-use crate::{Author, Conf, FileSystemBytes, OFVRState, Result};
+use ofvr::{Author, Conf, FileSystemBytes, OFVRState, Result};
 
 #[derive(Parser, Debug)]
 #[command()]

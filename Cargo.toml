@@ -7,7 +7,7 @@ description = """OFVR i.e.: One File VeRsioning is a version control
 system for a single file, initially thought of as a tool to allow to
 diffing and patching of binary files."""
 
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/gabrielfalcao/ofvr"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -28,8 +28,8 @@ serde_bytes = "0.11.15"
 serde_json = "1.0.133"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
-md5 = "0.7.0"
-toml = "0.8.19"
+md5 = "0.8.0"
+toml = "0.9.5"
 rand = { version = "0.9.1", features = ["serde"] }
 sanitation = "1.0.3"
 
