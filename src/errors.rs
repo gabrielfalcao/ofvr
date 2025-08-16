@@ -1,5 +1,6 @@
 use std::fmt::Display;
 use std::num::TryFromIntError;
+
 use serde::ser::SerializeStruct;
 use serde::{Serialize, Serializer};
 
@@ -17,7 +18,10 @@ pub enum Error {
 }
 
 impl Serialize for Error {
-    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    fn serialize<S: Serializer>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -106,3 +110,28 @@ impl From<TryFromIntError> for Error {
 impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug, Clone)]
+pub enum Exit {
+    Success,
+    Error(Error),
+}
+impl std::process::Termination for Exit {
+    fn report(self) -> std::process::ExitCode {
+        match &self {
+            Exit::Success => std::process::ExitCode::from(0),
+            Exit::Error(error) => {
+                eprintln!("{}", error);
+                std::process::ExitCode::from(1)
+            },
+        }
+    }
+}
+impl<T> From<std::result::Result<T, Error>> for Exit {
+    fn from(result: std::result::Result<T, Error>) -> Exit {
+        match result {
+            Ok(_) => Exit::Success,
+            Err(e) => Exit::Error(e),
+        }
+    }
+}
