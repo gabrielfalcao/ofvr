@@ -38,15 +38,15 @@ impl Display for Error {
             "{}{}",
             self.variant(),
             match self {
-                Self::CommitError(e) => e.to_string(),
-                Self::DiffError(e) => e.to_string(),
-                Self::HexDecodeError(e) => e.to_string(),
-                Self::DecodeError(e) => e.to_string(),
-                Self::EncodeError(e) => e.to_string(),
-                Self::IOError(e) => e.to_string(),
-                Self::BincodeError(e) => e.to_string(),
-                Self::TomlError(e) => e.to_string(),
-                Self::StateError(e) => e.to_string(),
+                Error::CommitError(e) => e.to_string(),
+                Error::DiffError(e) => e.to_string(),
+                Error::HexDecodeError(e) => e.to_string(),
+                Error::DecodeError(e) => e.to_string(),
+                Error::EncodeError(e) => e.to_string(),
+                Error::IOError(e) => e.to_string(),
+                Error::BincodeError(e) => e.to_string(),
+                Error::TomlError(e) => e.to_string(),
+                Error::StateError(e) => e.to_string(),
             }
         )
     }
