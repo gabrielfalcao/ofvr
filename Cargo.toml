@@ -11,7 +11,7 @@ edition = "2024"
 homepage = "https://github.com/gabrielfalcao/ofvr"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-autoexamples = false
+# autoexamples = false
 autobenches = false
 
 [dependencies]
