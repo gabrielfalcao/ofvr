@@ -1,20 +1,38 @@
-pub mod errors;
-pub mod io;
-pub mod models;
-pub mod utils;
-pub use utils::{to_flate_bytes, from_deflate_bytes};
+#[doc(hidden)] pub mod errors;
+#[doc(inline)] pub use errors::{Error, Result};
 
-pub use errors::{Error, Result};
-pub use io::read_data;
-pub use models::*;
+#[doc(hidden)] pub mod io;
+#[doc(inline)] pub use io::read_data;
 
-pub mod data;
-pub use data::{Data, DataSeq, DataSeqIterator};
-pub mod hash;
-pub use hash::{keccak256, keccak256_full};
+#[doc(hidden)] pub mod models;
+#[doc(inline)] pub use models::{Author, Commit, CommitData, Conf, ID, OFVRState};
 
-pub mod traits;
-pub use traits::{FileSystemBytes, PlainBytes};
+#[doc(hidden)] pub mod utils;
+#[doc(inline)]
+pub use utils::{chunk_padded, from_deflate_bytes, to_flate_bytes, xor, xor_ip};
 
-pub mod cli;
-pub use cli::*;
+#[doc(hidden)] pub mod data;
+#[doc(inline)] pub use data::{Data, DataIterator, DataSeq, DataSeqIterator, ToData};
+
+#[doc(hidden)] pub mod hash;
+#[doc(inline)]
+pub use hash::{Digest, Keccak256, Keccak256Full, keccak256, keccak256_full};
+
+#[doc(hidden)] pub mod traits;
+#[doc(inline)] pub use traits::{FileSystemBytes, PlainBytes, Sha3_384};
+
+#[doc(hidden)] pub mod cli;
+#[doc(inline)]
+pub use cli::{
+    Cli,
+    Command,
+    CommitOpt,
+    ConfCommand,
+    ConfGetOpt,
+    ConfInitOpt,
+    ConfOpt,
+    DiffOpt,
+    LogOpt,
+    MatchesOpt,
+    go,
+};

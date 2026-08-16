@@ -3,7 +3,7 @@ use std::ops::Index;
 
 use serde::{Deserialize, Serialize};
 
-use super::core::Data;
+use crate::data::core::Data;
 use crate::traits::PlainBytes;
 use crate::Result;
 

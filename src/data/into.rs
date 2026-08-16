@@ -1,4 +1,4 @@
-use super::core::Data;
+use crate::data::core::Data;
 
 impl Into<Vec<u8>> for Data {
     fn into(self) -> Vec<u8> {

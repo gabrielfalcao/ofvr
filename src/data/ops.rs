@@ -2,7 +2,7 @@ use std::ops::{
     Add, BitXor, BitXorAssign, Div, Index, IndexMut, Mul, Not, Rem, Shl, Shr, Sub,
 };
 
-use super::core::Data;
+use crate::data::core::Data;
 use crate::utils::{xor, xor_ip};
 
 
