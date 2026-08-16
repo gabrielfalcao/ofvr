@@ -24,7 +24,7 @@ or in a federated environment where a chain of responsability and
 trust can be enforced Certificate Authorities.
 
 The core architecture of OFVR is entirely focused on compliance with
-the CIA, that is, in using OFVR to version-control any file,
+the [CIA Triad](https://en.wikipedia.org/wiki/CIA_triad), that is, in using OFVR to version-control any file,
 individuals and organizations are empowered to enforce
 Confidentiality, Integrity and Availability of any given file should
 they choose to do so.
