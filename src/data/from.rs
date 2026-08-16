@@ -1,6 +1,6 @@
 use std::iter::IntoIterator;
 
-use super::core::Data;
+use crate::data::core::Data;
 
 impl From<Vec<u8>> for Data {
     fn from(data: Vec<u8>) -> Data {

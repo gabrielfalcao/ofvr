@@ -1,13 +1,13 @@
 [package]
 name = "ofvr"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Gabriel DeMoura <gabrielteratos@gmail.com>"]
 
 description = """OFVR i.e.: One File VeRsioning is a version control
 system for a single file, initially thought of as a tool to allow to
 diffing and patching of binary files."""
 
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/gabrielfalcao/ofvr"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -15,23 +15,33 @@ autoexamples = false
 autobenches = false
 
 [dependencies]
-chrono = { version = "0.4.38", features = ["serde", "libc"] }
-bincode = "1.3.3"
-serde = { version = "1.0.215", features = ["derive"] }
+chrono = { version = "0.4.45", features = ["serde", "libc"] }
+serde = { version = "1.0.229", features = ["derive"] }
 t16 = "0.0.1"
 bt-diff = "0.0.1"
-clap = { version = "4.5.21", features = ["derive", "env"] }
-iocore = { version = "2.3.2"  }
+clap = { version = "4.6.6", features = ["derive", "env"] }
+iocore = { version = "3.1.0" }
 hex = "0.4.3"
-flate2 = "1.0.35"
-serde_bytes = "0.11.15"
-serde_json = "1.0.133"
-sha2 = "0.10.8"
-sha3 = "0.10.8"
-md5 = "0.7.0"
-toml = "0.8.19"
-rand = { version = "0.9.1", features = ["serde"] }
+flate2 = "1.1.9"
+serde_bytes = "0.11.19"
+serde_json = "1.0.151"
+sha2 = "0.11.0"
+sha3 = "0.12.0"
+md5 = "0.8.1"
+toml = "0.9.8"
+rand = { version = "0.9.5", features = ["serde"] }
 sanitation = "1.0.3"
+postcard = { version = "1.1.3", features = ["use-std", "use-crc", "crc", "postcard-derive", "defmt", "use-defmt"] }
+thiserror = "2.0.20"
+color-eyre = "0.6.5"
+pem = "4.0.0"
+pest_derive = "2.9.0"
+rcgen = "0.14.9"
+rustls = "0.23.43"
+rustls-native-certs = "0.8.4"
+rustls-pemfile = "2.2.0"
+rustls-pki-types = "1.15.1"
+rustls-webpki = "0.103.14"
 
 
 [[bin]]
@@ -40,12 +50,12 @@ path = "ofvr.rs"
 
 [lib]
 name = "ofvr"
-path = "ofvr/lib.rs"
+path = "src/lib.rs"
 crate-type = ["lib"]
 required-features = []
 
 [dev-dependencies]
-iocore-test = "2.3.2"
+iocore-test = "3.1.0"
 
 # [profile.release]
 # lto = true

@@ -14,10 +14,11 @@ pub trait PlainBytes: for<'a> Deserialize<'a> + Serialize + Sized {
             .expect(&format!("{}::from_plain_bytes", std::any::type_name::<Self>()))
     }
     fn to_plain_bytes(&self) -> Vec<u8> {
-        bincode::serialize(self).expect("bytes")
+        let mut result = Vec::<u8>::new();
+        postcard::to_slice(self, &mut result).expect("bytes").to_vec()
     }
     fn from_plain_bytes(bytes: &[u8]) -> Result<Self> {
-        Ok(bincode::deserialize::<Self>(&bytes).unwrap())
+        Ok(postcard::from_bytes::<Self>(&bytes).unwrap())
     }
     fn to_flate_bytes(&self) -> Result<Vec<u8>> {
         Ok(crate::to_flate_bytes(self).unwrap())
