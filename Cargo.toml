@@ -1,6 +1,6 @@
 [package]
 name = "ofvr"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Gabriel DeMoura <gabrielteratos@gmail.com>"]
 
 description = """OFVR i.e.: One File VeRsioning is a version control
