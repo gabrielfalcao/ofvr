@@ -1,8 +1,6 @@
 use std::io::{Read, Write};
 
-use flate2::read::DeflateDecoder;
-use flate2::write::DeflateEncoder;
-use flate2::Compression;
+use flate2::{Compression, read::DeflateDecoder, write::DeflateEncoder};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::Result;
@@ -32,7 +30,8 @@ pub fn xor(a: &Vec<u8>, b: &Vec<u8>) -> Vec<u8> {
 }
 
 pub fn to_flate_bytes<T: Serialize>(data: &T) -> Result<Vec<u8>> {
-    let bytes = bincode::serialize(data).unwrap();
+    let mut result = Vec::<u8>::new();
+    let bytes = postcard::to_slice(data, &mut result).unwrap().to_vec();
     let mut e = DeflateEncoder::new(Vec::with_capacity(bytes.len()), Compression::best());
     e.write_all(&bytes)?;
     Ok(e.finish()?)
@@ -42,7 +41,7 @@ pub fn from_deflate_bytes<T: for<'a> Deserialize<'a>>(bytes: &[u8]) -> Result<T>
     let mut d = DeflateDecoder::new(bytes);
     let mut bytes = Vec::<u8>::with_capacity(bytes.len());
     d.read_to_end(&mut bytes).unwrap();
-    Ok(bincode::deserialize::<T>(&bytes).unwrap())
+    Ok(postcard::from_bytes::<T>(&bytes).unwrap())
 }
 
 pub fn chunk_padded(items: &[u8], chunk_size: usize, padding: u8) -> Vec<Vec<u8>> {
