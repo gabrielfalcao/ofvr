@@ -9,6 +9,7 @@ use crate::Result;
 
 #[derive(Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Data {
+    #[serde(with = "serde_bytes")]
     pub inner: Vec<u8>,
 }
 impl PartialEq for Data {
