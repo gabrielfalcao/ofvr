@@ -1,7 +1,7 @@
 use std::cmp::PartialEq;
 use std::fmt::Display;
 
-use rand::Rng;
+pub use rand::{Rng, self};
 use serde::{Deserialize, Serialize};
 
 use crate::traits::PlainBytes;

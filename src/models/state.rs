@@ -1,9 +1,9 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
-use bt_diff::{AxisBoundary, Diff};
+pub use bt_diff::{AxisBoundary, Diff, self};
 use iocore::Path;
-use serde::{Deserialize, Serialize};
-pub use sha3::{Digest, Keccak256, Keccak256Full};
+pub use serde::{Deserialize, Serialize, self};
+pub use sha3::{Digest, Keccak256, Keccak256Full, self};
 
 use crate::errors::{Error, Result};
 use crate::io::read_data;

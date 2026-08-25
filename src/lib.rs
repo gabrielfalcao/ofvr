@@ -1,3 +1,4 @@
+#![allow(unused)]
 #[doc(hidden)] pub mod errors;
 #[doc(inline)] pub use errors::{Error, Result};
 

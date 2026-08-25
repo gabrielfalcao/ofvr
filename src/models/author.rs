@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 use crate::traits::PlainBytes;
-
+use crate::models::Accountability;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Author {
     name: String,
     email: String,
+    accountability: Option<Accountability>,
 }
 
 impl std::fmt::Display for Author {
@@ -18,6 +19,7 @@ impl Author {
         Author {
             name: name.to_string(),
             email: email.to_string(),
+            accountability: None
         }
     }
 

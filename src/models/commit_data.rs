@@ -1,7 +1,7 @@
 use bt_diff::Diff;
 use iocore::Path;
 use serde::{Deserialize, Serialize};
-pub use sha3::{Digest, Keccak256, Keccak256Full};
+ use sha3::{Digest, Keccak256, Keccak256Full};
 use crate::traits::PlainBytes;
 
 use crate::models::author::Author;
